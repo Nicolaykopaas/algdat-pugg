@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AlgDat-pugg</title>
+<meta name="description" content="Flervalgspugg til TDT4120 Algoritmer og datastrukturer, med fremdrift og leaderboard.">
+<script>try{const t=localStorage.getItem("algdat-tema");if(t)document.documentElement.dataset.theme=t;}catch{}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: én kolonne. Hjem = fremdrift (total, temaer, prøvehistorikk). Øving = ett kort om gangen. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#17202b; --muted:#5a6676; --line:#d9dee6; --track:#e6eaf0;
+  --accent:#2747a8; --accent-soft:#e3e9f8; --on-accent:#ffffff;
+  --ok:#1f7a4a; --ok-soft:#e1f2e8; --mid:#c08a1a; --mid-soft:#f7eedb; --bad:#b0322b; --bad-soft:#f8e3e1;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151c; --surface:#18202a; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2a3542; --track:#242e3a;
+  --accent:#8aa6f5; --accent-soft:#1f2b47; --on-accent:#10151c;
+  --ok:#6cc995; --ok-soft:#173326; --mid:#e2b450; --mid-soft:#3a2f17; --bad:#ef8a83; --bad-soft:#3a1d1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151c; --surface:#18202a; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2a3542; --track:#242e3a;
+  --accent:#8aa6f5; --accent-soft:#1f2b47; --on-accent:#10151c;
+  --ok:#6cc995; --ok-soft:#173326; --mid:#e2b450; --mid-soft:#3a2f17; --bad:#ef8a83; --bad-soft:#3a1d1b; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--display);margin:0;letter-spacing:-.01em}
+h1{font-size:2rem;font-weight:700}
+h2{font-size:1.1rem;font-weight:700}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.btn{font:600 .95rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:10px 16px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.opt:focus-visible,.tema:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.actions .btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:14px 16px}
+.actions .btn small{font-weight:400;font-size:.85rem;opacity:.85}
+/* fremdrift */
+.big{font-family:var(--display);font-size:3rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.seg{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--track)}
+.seg i{display:block;height:100%}
+.seg .m{background:var(--ok)} .seg .p{background:var(--mid)} .seg .b{background:var(--bad)}
+.seg.thin{height:6px;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.temaer{display:flex;flex-direction:column;gap:4px}
+.tema{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:none;border:0;border-radius:10px;padding:10px 8px;cursor:pointer}
+.tema:hover{background:var(--bg)}
+.tema .seg{grid-column:1 / -1}
+.tema .n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.badge{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;margin-left:8px;vertical-align:2px}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;position:relative;margin-top:18px}
+.chart .col{flex:1 1 0;max-width:40px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.chart .bar{width:100%;border-radius:4px 4px 0 0;background:var(--bad)}
+.chart .bar.pass{background:var(--ok)}
+.chart .lbl{position:absolute;font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.chart .line{position:absolute;left:0;right:0;border-top:1px dashed var(--muted);opacity:.6}
+.chart .linelbl{position:absolute;right:0;font-size:.7rem;color:var(--muted);transform:translateY(-110%)}
+/* øving */
+.top{display:flex;align-items:center;gap:12px}
+.top .seg{flex:1}
+.back{background:none;border:0;color:var(--accent);font:600 .95rem var(--body);cursor:pointer;padding:6px 0}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.q{font-family:var(--display);font-weight:500;font-size:1.3rem;line-height:1.35;margin:0;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer}
+.opt .k{font-family:var(--mono);font-size:.8rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;margin-top:2px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt.picked{border-color:var(--accent);background:var(--accent-soft)}
+.verdict{font-weight:600;margin:0}
+.verdict.ok{color:var(--ok)} .verdict.no{color:var(--bad)}
+.why{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.why p{margin:0}
+.result{text-align:center;align-items:center}
+.pill{display:inline-block;font-weight:700;padding:4px 14px;border-radius:999px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.no{background:var(--bad-soft);color:var(--bad)}
+.review{display:flex;flex-direction:column;gap:12px;text-align:left;width:100%}
+.review .item{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:4px}
+.review .item p{margin:0}
+.hint{font-size:.8rem;color:var(--muted);margin:0}
+.danger{background:none;border:0;color:var(--muted);font:.85rem var(--body);text-decoration:underline;cursor:pointer;align-self:flex-start;padding:0}
+@media (max-width:480px){.stats{grid-template-columns:repeat(3,1fr)}.big{font-size:2.4rem}}
+@media (prefers-reduced-motion: no-preference){.seg i{transition:width .3s}}
+</style>
+
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+.wrap{max-width:1120px}
+.bar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bar-top h1{font-size:1.6rem}
+.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chipu{font:600 .9rem var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:4px 12px}
+.icon-btn{font:600 .85rem var(--body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+@media (min-width:900px){.grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.quizwrap{max-width:720px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+/* login */
+.login{max-width:440px;margin:6vh auto 0;width:100%}
+.login label{font-weight:600}
+.login input{font:1.1rem var(--mono);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
+.login input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.err{color:var(--bad);font-size:.9rem;margin:0}
+/* leaderboard */
+.lb{display:flex;flex-direction:column}
+.lb .r{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.lb .r:first-child{border-top:0}
+.lb .r.me{background:var(--accent-soft);border-radius:8px;border-top-color:transparent}
+.lb .rank{font-family:var(--display);font-weight:700;color:var(--muted);text-align:right}
+.lb .r:nth-child(-n+3) .rank{color:var(--fg)}
+.lb .nm{font-family:var(--mono);font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .pct{font-weight:600}
+.lb .sub2{font-size:.8rem;color:var(--muted);min-width:4.5em;text-align:right}
+.lb .mini{grid-column:2 / -1;height:4px;border-radius:2px;background:var(--track);overflow:hidden}
+.lb .mini i{display:block;height:100%;background:var(--ok)}
+.lbhead{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 6px}
+.lbhead span:nth-child(3){text-align:right}
+.lbhead span:nth-child(4){min-width:4.5em;text-align:right}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+.sync{font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// ======= KONFIG: fyll inn fra Supabase → Project Settings → API =======
+const SUPABASE_URL = "";      // f.eks. "https://abcd1234.supabase.co"
+const SUPABASE_KEY = "";      // anon / publishable key
+// ======================================================================
+const ONLINE = !!(SUPABASE_URL && SUPABASE_KEY);
+
+const Q = [
+// ---------- Kjøretider ----------
+["Kjøretider","Kjøretiden til BFS med nabolister?",["O(V + E)","O(V²)","O(E lg V)","O(V · E)"],"Hver node legges i køen maks én gang, og hver naboliste gås gjennom én gang. Eksamen aug 2026."],
+["Kjøretider","Kjøretiden til DFS?",["Θ(V + E)","Θ(V²)","Θ(V lg V + E)","Θ(E lg E)"],"Samme logikk som BFS: hver node besøkes én gang, hver kant sjekkes én gang (nabolister)."],
+["Kjøretider","Kjøretiden til Dijkstra med binær min-haug?",["O((V + E) lg V)","O(V · E)","O(V + E)","O(V³)"],"V Extract-Min og opptil E Decrease-Key, hver koster O(lg V)."],
+["Kjøretider","Kjøretiden til Bellman-Ford?",["O(V · E)","O(V + E)","O(E lg V)","O(V³)"],"|V| − 1 runder der alle E kanter slakkes, pluss én runde for å sjekke negative sykler."],
+["Kjøretider","Kjøretiden til Floyd-Warshall?",["Θ(V³)","Θ(V² lg V)","Θ(V · E)","Θ(V⁴)"],"Tre nøstede løkker over k, i og j."],
+["Kjøretider","Kjøretiden til Kruskal?",["O(E lg V)","O(V + E)","O(V²)","O(E · V)"],"Domineres av sorteringen av kantene: O(E lg E) = O(E lg V). Eksamen des 2024."],
+["Kjøretider","Kjøretiden til Prim med binær min-haug?",["O(E lg V)","O(V + E)","O(V³)","O(E²)"],"Samme mønster som Dijkstra: Extract-Min og Decrease-Key i en binær haug."],
+["Kjøretider","Kjøretiden til DAG-Shortest-Paths?",["Θ(V + E)","Θ(V lg V + E)","Θ(V · E)","Θ(V²)"],"Topologisk sortering (Θ(V + E)) og så én slakking per kant."],
+["Kjøretider","Kjøretiden til Edmonds-Karp?",["O(V E²)","O(E · |f*|)","O(V² E²)","O(V E lg V)"],"Antall forøkende stier er O(VE), og hver finnes med BFS på O(E). O(E·|f*|) er generell Ford-Fulkerson med heltallskapasiteter."],
+["Kjøretider","Kjøretiden til Build-Max-Heap?",["O(n)","O(n lg n)","O(lg n)","O(n²)"],"Lineær, fordi de fleste nodene ligger nær bunnen og bare synker kort. Eksamen des 2025."],
+["Kjøretider","Kjøretiden til Heapsort?",["O(n lg n) i alle tilfeller","O(n) i beste tilfelle","O(n²) i verste tilfelle","Θ(n + k)"],"Build-Max-Heap O(n), deretter n − 1 Max-Heapify à O(lg n)."],
+["Kjøretider","Kjøretiden til Insertion-Sort?",["O(n²) og Ω(n)","Θ(n²)","Θ(n lg n)","O(n lg n) og Ω(n)"],"Beste tilfelle: allerede sortert gir Θ(n). Verste: baklengs sortert gir Θ(n²). Ikke ett Θ for alle tilfeller. Eksamen aug 2026."],
+["Kjøretider","Kjøretiden til Merge-Sort?",["Θ(n lg n) i alle tilfeller","Θ(n) i beste tilfelle","Θ(n²) i verste tilfelle","Θ(n lg² n)"],"Samme rekurrens T(n) = 2T(n/2) + Θ(n) uansett input."],
+["Kjøretider","Kjøretiden til Counting-Sort?",["Θ(n + k)","Θ(n lg n)","Θ(n · k)","Θ(k lg n)"],"Én gjennomgang av A (n) og noen gjennomganger av tellearrayet C (k)."],
+["Kjøretider","Kjøretiden til Radix-Sort med d sifre i base k?",["Θ(d(n + k))","Θ(n lg n)","Θ(n · k · d)","Θ(d · n lg n)"],"d runder med en stabil Counting-Sort på Θ(n + k) hver."],
+["Kjøretider","Forventet kjøretid til Bucket-Sort med uniformt fordelt input?",["Θ(n)","Θ(n lg n)","Θ(n²)","Θ(n + k)"],"Forventet få elementer per bøtte. Verste tilfelle er Θ(n²) hvis alt havner i samme bøtte."],
+["Kjøretider","Forventet kjøretid til Randomized-Select?",["Θ(n)","Θ(n lg n)","Θ(lg n)","Θ(n²)"],"Rekurserer bare på én side: n + n/2 + n/4 + … = Θ(n). Verste tilfelle er Θ(n²)."],
+["Kjøretider","Amortisert kjøretid til Table-Insert i en dynamisk tabell med dobling?",["Θ(1)","Θ(lg n)","Θ(n)","Θ(n lg n)"],"De dyre kopieringene skjer sjeldnere og sjeldnere. Totalt Θ(n) for n innsettinger. Eksamen aug 2024."],
+["Kjøretider","Kjøretiden til LCS for sekvenser av lengde m og n?",["Θ(mn)","Θ(m + n)","Θ(2^m)","Θ(mn lg n)"],"Tabellen c har (m+1)(n+1) celler, og hver fylles på konstant tid."],
+["Kjøretider","Kjøretiden til bottom-up stavkapping (rod cutting) for lengde n?",["Θ(n²)","Θ(n)","Θ(2^n)","Θ(n lg n)"],"For hver lengde j prøves j mulige første kutt: 1 + 2 + … + n."],
+["Kjøretider","Kjøretiden til Huffman med n tegn (min-haug)?",["O(n lg n)","O(n)","O(n²)","O(2^n)"],"n − 1 sammenslåinger, hver med Extract-Min og Insert på O(lg n)."],
+["Kjøretider","Kjøretiden til Gale-Shapley med n par?",["O(n²)","O(n lg n)","O(n³)","O(n!)"],"Hver mann frir til hver kvinne maks én gang: maks n² frierier."],
+["Kjøretider","Kjøretiden for m operasjoner på disjunkte mengder med union by rank og stikomprimering?",["O(m α(n))","O(m lg n)","O(m n)","O(m)"],"α er den inverse Ackermann-funksjonen, i praksis ≤ 4."],
+["Kjøretider","Kjøretiden til Topologisk sortering?",["Θ(V + E)","Θ(V lg V)","Θ(V²)","Θ(E lg E)"],"DFS, og så legges hver node først i en lenket liste når den er ferdig."],
+
+// ---------- Grafer ----------
+["Grafer","Hva kreves for at Dijkstra skal gi riktig svar?",["Ingen kanter med negativ vekt","Ingen negative sykler","At grafen er asyklisk","At grafen er urettet"],"En node som er hentet ut, regnes som ferdig. En negativ kant senere kunne gitt den en kortere vei."],
+["Grafer","Hvorfor kan Dijkstra gi feil svar med negative kanter?",["En node som er tatt ut av køen, kan senere få kortere avstand via en negativ kant, men oppdateres ikke","Prioritetskøen støtter ikke negative nøkler","Algoritmen går i uendelig løkke","Den slakker bare kanter én gang totalt"],"Grådighetsargumentet («den minste ikke-ferdige avstanden er endelig») holder bare når alle kantvekter er ≥ 0. Eksamen des 2025."],
+["Grafer","Hva kreves for at Floyd-Warshall skal gi riktig svar med negative kantvekter?",["Ingen negative sykler","Ingen negative kanter","At grafen er en DAG","At grafen er sammenhengende"],"Negative kanter er greit. Med en negativ sykel finnes det ingen korteste vei. Eksamen aug 2026."],
+["Grafer","Hva gjør Bellman-Ford hvis grafen har en negativ sykel som kan nås fra s?",["Returnerer false","Gir feil avstander uten å si fra","Går i uendelig løkke","Fjerner sykelen"],"Etter |V| − 1 runder sjekkes alle kanter én gang til. Kan noe fortsatt forbedres, finnes en negativ sykel."],
+["Grafer","Hvilken node velger Dijkstra i hver iterasjon?",["Den ubehandlede noden med lavest avstandsestimat v.d","Den med flest naboer","Den som ble oppdaget først","En tilfeldig nabo av forrige node"],"Extract-Min på prioritetskøen. Eksamen aug 2023."],
+["Grafer","Hvilket felt har DFS-Visit, BFS, DAG-Shortest-Paths, Dijkstra, Bellman-Ford og Prim til felles?",["v.π — forgjengeren i søke- eller korteste-vei-treet","v.d — avstanden","v.f — ferdigtidspunktet","v.key — nøkkelen i køen"],"π-pekerne beskriver selve løsningen (treet). v.d har ikke Prim, og v.f har bare DFS. Eksamen des 2025."],
+["Grafer","Hva er en topologisk sortering?",["En lineær ordning av nodene slik at alle kanter peker fremover","En sortering av nodene etter grad","En ordning etter avstand fra startnoden","En sortering av kantene etter vekt"],"Finnes hvis og bare hvis grafen er en DAG. Eksamen des 2023."],
+["Grafer","En DAG har en rettet hamiltonsti. Hvor mange topologiske sorteringer har den?",["Nøyaktig én","Minst to","Ingen","Avhenger av antall kilder"],"Hamiltonstien tvinger rekkefølgen på alle nabopar. Derfor kan Lurvik ikke ha rett i begge påstandene. Eksamen aug 2026."],
+["Grafer","Hvordan kan antall sterke komponenter endres når du legger til én kant?",["Det synker eller forblir likt, men øker aldri","Det øker alltid med én","Det kan øke eller synke","Det forblir alltid likt"],"En ny kant kan bare lage nye sykler, og dermed slå sammen komponenter. Eksamen des 2025."],
+["Grafer","Korteste vei fra alle noder til én node t i en rettet, uvektet graf?",["Snu alle kantene og kjør BFS fra t","Kjør BFS fra hver node","Kjør Floyd-Warshall","Kjør DFS fra t"],"Den transponerte grafen gjør problemet til én-kilde. Θ(V + E). Eksamen aug 2024."],
+["Grafer","Lengste enkle vei fra s til t. Når kan det løses effektivt?",["Når grafen er en DAG: neger vektene og kjør DAG-Shortest-Paths","Alltid, med Bellman-Ford på negerte vekter","Aldri, problemet er alltid NP-hardt","Når alle vekter er positive"],"Generelt er det NP-hardt. Negerte vekter i en graf med sykler gir negative sykler. Eksamen aug 2024."],
+["Grafer","Hvor mange runder kjører Bellman-Ford?",["|V| − 1","|V|","|E|","lg |V|"],"En korteste enkel sti har maks |V| − 1 kanter."],
+["Grafer","Hvordan endre Transitive-Closure så den teller antall stier i en DAG?",["Bytt OR/AND med + og ·","Bytt OR med min","Bytt AND med max","Kjør den |V| ganger"],"t_ij = t_ij + t_ik · t_kj. Det fungerer fordi DAG-en ikke har uendelig mange stier. Eksamen aug 2024."],
+["Grafer","Hva gjør Extend-Shortest-Paths i Slow-APSP?",["Utvider L^(r) med én kant til: min over k av l_ik + w_kj","Legger til én node i mellomnodemengden","Slakker alle kanter én gang","Dobler maks antall kanter"],"Minner om matrisemultiplikasjon med (min, +). Faster-APSP dobler i stedet ved å kvadrere. Eksamen des 2024."],
+["Grafer","Hvor stor plass tar en nabomatrise?",["Θ(V²)","Θ(V + E)","Θ(E)","Θ(V lg V)"],"Én celle per nodepar. Nabolister bruker Θ(V + E)."],
+
+// ---------- Sortering ----------
+["Sortering","Hva gjør at Counting-Sort kan slå Ω(n lg n)?",["Den sammenligner ikke elementer, men bruker at de er heltall i et begrenset område 0…k","Den er rekursiv","Den bruker en haug","Den sorterer på plass"],"Nedre grense Ω(n lg n) gjelder bare sammenligningsbasert sortering. Eksamen aug 2023 og des 2025."],
+["Sortering","Hva er k i Counting-Sort(A, n, k)?",["Største verdi i A (verdiene ligger i 0…k)","Antall elementer","Antall siffer","Antall bøtter"],"Eksamen des 2023."],
+["Sortering","Hva skjer om den siste løkka i Counting-Sort går «1 to n» i stedet for «n downto 1»?",["Den blir ikke lenger stabil, men sorterer fortsatt","Den sorterer feil","Kjøretiden blir Θ(n²)","Ingenting endrer seg"],"Like elementer havner i motsatt rekkefølge. Stabilitet trengs når Counting-Sort brukes i Radix-Sort. Eksamen aug 2024."],
+["Sortering","Hvilken antagelse gjør vi om input til Bucket-Sort?",["Uniformt og uavhengig fordelt i [0, 1)","Heltall i 0…k","Allerede nesten sortert","Ingen duplikater"],"Eksamen des 2024."],
+["Sortering","Nedre grense for sammenligningsbasert sortering i verste tilfelle?",["Ω(n lg n)","Ω(n)","Ω(n²)","Ω(lg n)"],"Et beslutningstre med n! løv har høyde ≥ lg(n!) = Θ(n lg n)."],
+["Sortering","Init + Main sorterer A sammenligningsbasert, og Main er O(n). Hva er Init i verste tilfelle?",["Ω(n lg n)","O(n)","O(1)","Θ(n²)"],"Totalt må det bli Ω(n lg n), og Main bidrar bare O(n). Eksamen des 2024."],
+["Sortering","Quicksort (siste element som pivot) på n like elementer?",["Θ(n²), og randomisering hjelper ikke","Θ(n lg n)","Θ(n), fordi alt er sortert","Θ(n²), men Randomized-Quicksort gir Θ(n lg n)"],"Alle elementer havner på samme side av pivot uansett hvilken pivot du velger. Eksamen aug 2026."],
+["Sortering","Kan pivotvalg alene gi Quicksort garantert Θ(n lg n)?",["Ja, velg medianen med Select (lineær i verste tilfelle)","Nei, det er umulig","Ja, velg et tilfeldig element","Ja, velg første element"],"Medianen som pivot gir perfekt balanse, og Select finner den på Θ(n). Eksamen aug 2024."],
+["Sortering","Lurvik: Insertion så Merge. Smartnes: Merge så Insertion. Hvem har best kjøretid i verste tilfelle?",["Smartnes: Θ(n lg n)","Lurvik: Θ(n lg n)","Like, begge Θ(n²)","Like, begge Θ(n lg n)"],"Insertion-Sort på en allerede sortert tabell er Θ(n). Lurvik betaler Θ(n²) først. Eksamen aug 2023."],
+["Sortering","Hvilke sorteringsalgoritmer er stabile (som i læreboka)?",["Insertion, Merge, Counting","Heap, Quick, Merge","Quick, Counting, Insertion","Heap, Counting, Radix"],"Heapsort og Quicksort er ikke stabile."],
+["Sortering","Radix-Sort bruker hvilken hjelpesortering per siffer?",["En stabil sortering, typisk Counting-Sort","Quicksort","Heapsort","Hvilken som helst"],"Stabiliteten sørger for at sorteringen på tidligere (mindre signifikante) sifre bevares."],
+["Sortering","I hvilken rekkefølge sorterer Radix-Sort sifrene?",["Minst signifikante siffer først","Mest signifikante siffer først","Tilfeldig","Midterste først"],"Etter runde i er tallene sortert på de i siste sifrene. Eksamen aug 2026."],
+["Sortering","Kan average-case være lik best-case eller worst-case når de to er forskjellige?",["Ja, f.eks. Insertion-Sort: snitt Θ(n²) = verste","Nei, snittet ligger alltid strengt imellom","Bare for randomiserte algoritmer","Bare hvis beste tilfelle er Θ(1)"],"Asymptotisk notasjon ser bort fra konstanter: n²/4 og n²/2 er begge Θ(n²). Quicksort er et eksempel den andre veien. Eksamen des 2025."],
+
+// ---------- Flyt ----------
+["Flyt","Restkapasiteten fra u til v når kanten (u, v) har flyt 3 og kapasitet 5?",["2","3","5","8"],"c_f(u, v) = c(u, v) − f(u, v) for kanter i E. Eksamen des 2024."],
+["Flyt","Hva er c_f(u, v) når (v, u) ∈ E, men (u, v) ∉ E?",["f(v, u)","c(v, u) − f(v, u)","0","c(v, u)"],"Du kan «angre» flyten som går motsatt vei. Eksamen des 2025."],
+["Flyt","Hvordan håndterer du antiparallelle kanter (u→v og v→u)?",["Splitt den ene med en ny node: u→x→v med samme kapasitet","Fjern den minste","Slå dem sammen til én kant","Det er umulig å håndtere"],"Dette er ingen reell begrensning. Eksamen aug 2023 og aug 2024."],
+["Flyt","Heltallskapasiteter: hva stemmer om flyten i hver kant?",["Ford-Fulkerson gir heltall i hver kant, men andre optimale løsninger kan ha ikke-heltall","Alle optimale løsninger har heltall i hver kant","Ford-Fulkerson kan også gi ikke-heltall","Maksflytverdien kan være et ikke-heltall"],"Heltallsteoremet. Moteksempel: to parallelle veier der flyten deles 0,5 og 0,5. Eksamen aug 2025 og aug 2026."],
+["Flyt","Max-flow min-cut-teoremet sier at …",["maksimal flytverdi = kapasiteten til et minimalt snitt","maks flyt = antall kanter i minste snitt","maks flyt = summen av alle kapasiteter","minimalt snitt = korteste sti"],"Når det ikke finnes noen forøkende sti, gir nodene som kan nås fra s i restnettet et snitt med akkurat flytverdien."],
+["Flyt","Hvilken forøkende sti velger Edmonds-Karp?",["Den korteste (færrest kanter), funnet med BFS","Den med størst flaskehals","Den lengste","En vilkårlig, med DFS"],"Det gir polynomisk kjøretid O(VE²) uansett kapasiteter."],
+["Flyt","Hvordan løser du maksimal bipartitt matching med flyt?",["Legg til s→L og R→t, alle kapasiteter 1, og kjør Ford-Fulkerson","Kjør Gale-Shapley","Kjør Kruskal på grafen","Kjør BFS fra hver node i L"],"Heltallsteoremet gir 0/1-flyt i hver kant, og det er en matching."],
+["Flyt","Hva er flaskehalsen (residual capacity) til en forøkende sti?",["Minste restkapasitet langs stien","Største restkapasitet langs stien","Summen av restkapasitetene","Antall kanter i stien"],"Det er så mye flyten kan økes med langs akkurat den stien."],
+
+// ---------- NP ----------
+["NP","Forskjellen på NP-hard og NP-komplett?",["NP-komplett = NP-hard og i NP","NP-hard er et strengere krav enn NP-komplett","De er det samme","NP-komplett betyr at det ikke finnes en polynomisk algoritme"],"NP-harde problemer trenger ikke ligge i NP. De kan være enda vanskeligere. Eksamen aug 2026."],
+["NP","Hva er konsekvensen av en polynomisk algoritme for ett NPC-problem?",["P = NP","Bare det problemet ligger i P","Alle problemer blir polynomiske","Ingen konsekvens"],"Alle problemer i NP reduseres polynomisk til ethvert NPC-problem. Eksamen aug 2023."],
+["NP","Du vil vise at P er NP-hardt ved hjelp av et kjent NP-hardt problem Q. Hvilken retning reduserer du?",["Fra Q til P (Q ≤ₚ P)","Fra P til Q (P ≤ₚ Q)","Begge veier","Det spiller ingen rolle"],"«Kan jeg løse P, kan jeg løse Q». Derfor er P minst like vanskelig. Eksamen des 2025."],
+["NP","Lurvik reduserer sitt NP-problem til SUBSET-SUM. Hva har han vist?",["Ingenting nytt om hvor vanskelig problemet er","At problemet er NP-komplett","At problemet er i P","At SUBSET-SUM er enkelt"],"Alle NP-problemer kan reduseres til SUBSET-SUM. Det sier bare at problemet ikke er vanskeligere. Eksamen des 2024."],
+["NP","0-1-ryggsekk løses på Θ(nW). Er det polynomisk?",["Nei, pseudopolynomisk: W kan være eksponentiell i antall bits i input","Ja, det er et polynom i n og W","Ja, fordi W er en konstant","Nei, det er eksponentielt i n"],"Input-størrelsen er ca. lg W bits, så W = 2^(lg W). Eksamen aug 2024."],
+["NP","Hvilket av disse problemene er i P?",["Euler-sykel (bruk hver kant nøyaktig én gang)","Hamilton-sykel","TSP (beslutning)","VERTEX-COVER"],"Euler: alle noder har partallsgrad og grafen er sammenhengende. Hamilton (hver node én gang) er NP-komplett. Eksamen aug 2023."],
+["NP","Hva er input til kretsen i beviset for at CIRCUIT-SAT er NP-hardt?",["Sertifikatet (beviset) som verifikasjonsalgoritmen sjekker","Selve probleminstansen x","Programkoden","Antall steg"],"x og programmet er bakt inn som konstanter. Bare sertifikatbitene kan settes fritt. Eksamen aug 2023."],
+["NP","Spenntre med færrest mulig løvnoder. Hvor vanskelig er det?",["NP-hardt: 2 løv betyr en hamiltonsti","Lett med Kruskal","Lett med BFS","Lett med DFS"],"Et spenntre med nøyaktig to løv er en hamiltonsti. Eksamen aug 2026."],
+["NP","Avgjøre om G har en homomorfi til K₃,₃?",["Polynomisk: det er det samme som å sjekke om G er bipartitt","NP-komplett, som 3-fargelegging","NP-komplett, fordi homomorfi generelt er det","Uavgjørbart"],"En homomorfi til en bipartitt graf med minst én kant finnes nøyaktig når G selv er bipartitt. Det sjekkes med BFS. Eksamen des 2025."],
+["NP","Hvilket av disse er IKKE NP-komplett (så vidt vi vet)?",["Korteste vei","CLIQUE","SUBSET-SUM","3-CNF-SAT"],"Korteste vei løses med Dijkstra eller Bellman-Ford."],
+["NP","Hva er et nodedekke (vertex cover)?",["En mengde noder slik at hver kant har minst én ende i mengden","En mengde kanter som dekker alle noder","En mengde noder uten kanter mellom seg","En sykel gjennom alle nodene"],"Eksamen aug 2024."],
+["NP","Spillelisten skal være nøyaktig t sekunder lang. Hvilket kjent problem er det?",["SUBSET-SUM: NP-komplett, men pseudopolynomisk DP på O(nt)","Fractional knapsack: grådig","Aktivitetsutvelgelse","Korteste vei"],"Sanglengdene er tallene og t er målet. Eksamen des 2023."],
+
+// ---------- Asymptotikk ----------
+["Asymptotikk","Stemmer 2^(n+1) = O(2^n)?",["Ja: 2^(n+1) = 2 · 2^n","Nei, eksponenten er større","Bare for n > 1","Nei, bare Ω"],"En konstant faktor 2. Eksamen aug 2026."],
+["Asymptotikk","Stemmer 4^n = O(2^n)?",["Nei: 4^n = 2^n · 2^n, og faktoren 2^n er ingen konstant","Ja, begge er eksponentielle","Ja, konstanten er 2","Bare for små n"],"Eksamen aug 2026."],
+["Asymptotikk","To av O(n³), Ω(n³) og Θ(n³) stemmer. Hvilken velger du?",["Θ(n³): to av dem stemmer, så alle tre gjør det, og Θ sier mest","O(n³)","Ω(n³)","Det kan ikke avgjøres"],"O + Ω ⇔ Θ, og Θ gir begge deler. Eksamen des 2025."],
+["Asymptotikk","Tre slags gjennomsnittlig kjøretid. Hva tar man gjennomsnittet av?",["Over inputfordelingen (average case), over algoritmens tilfeldige valg (forventet) og over en sekvens operasjoner (amortisert)","Beste, verste og median","Over n, lg n og n²","Over tid, minne og antall sammenligninger"],"Eksamen des 2024."],
+["Asymptotikk","Hvor mye øker m? «for i: m++; for j: m++; for k: m++» nøstet, alle 1…n",["Θ(n³)","Θ(n)","Θ(n² lg n)","Θ(3n)"],"n + n² + n³ = Θ(n³). Eksamen des 2025."],
+["Asymptotikk","k = 1; for i = 1 to n: m = m + k; k = k + k. Hvor mye øker m?",["Θ(2^n)","Θ(n)","Θ(n²)","Θ(n lg n)"],"1 + 2 + 4 + … + 2^(n−1) = 2^n − 1. Eksamen des 2025."],
+["Asymptotikk","Brute force på et passord med n tegn fra et alfabet av størrelse k?",["Θ(k^n) forsøk","Θ(n^k)","Θ(n · k)","Θ(n!)"],"k valg for hver av n posisjoner. Eksamen aug 2023."],
+["Asymptotikk","for i = 1 to n: for j = 1 to n: if A[i] < A[j]: swap. Kjøretid?",["Θ(n²)","Θ(n lg n)","Θ(n)","O(n²), men Ω(n)"],"Løkkene går alltid helt ut, uansett input. Eksamen aug 2023."],
+
+// ---------- Rekurrenser ----------
+["Rekurrenser","T(n) = 2T(n/2) + n",["Θ(n lg n)","Θ(n)","Θ(n²)","Θ(lg n)"],"Masterteoremet tilfelle 2: n^(log₂2) = n = f(n)."],
+["Rekurrenser","T(n) = 3T(n/2) + n",["Θ(n^lg 3) ≈ Θ(n^1,585)","Θ(n lg n)","Θ(n)","Θ(n²)"],"n^(log₂3) dominerer f(n) = n (tilfelle 1). Eksamen aug 2026."],
+["Rekurrenser","T(n) = T(n/5) + T(4n/5) + n",["Θ(n lg n)","Θ(n)","Θ(n²)","Θ(n^1,2)"],"Hvert nivå i rekursjonstreet koster ≤ n, og dybden er mellom log₅ n og log_{5/4} n. Eksamen aug 2026."],
+["Rekurrenser","T(n) = 2T(n/2) + n / lg n",["Θ(n lg lg n)","Θ(n lg n)","Θ(n)","Masterteoremet gir Θ(n)"],"Masterteoremet dekker ikke dette. Nivå i koster n/(lg n − i), og summen blir n · H(lg n) = Θ(n lg lg n). Eksamen aug 2023."],
+["Rekurrenser","T(n) = 4T(n/2) + n²",["Θ(n² lg n)","Θ(n²)","Θ(n³)","Θ(n⁴)"],"n^(log₂4) = n² = f(n): tilfelle 2."],
+["Rekurrenser","T(n) = T(n/2) + 1",["Θ(lg n)","Θ(1)","Θ(n)","Θ(n lg n)"],"Binærsøk."],
+["Rekurrenser","T(n) = T(n − 1) + n",["Θ(n²)","Θ(n lg n)","Θ(n)","Θ(2^n)"],"1 + 2 + … + n = n(n+1)/2."],
+["Rekurrenser","T(n) = T(n − 1) + 2n − 1, T(0) = 0. Eksakt løsning?",["n²","n² − 1","2n²","n(n+1)/2"],"Summen av de n første oddetallene er n². Eksamen des 2025."],
+["Rekurrenser","T(n) = 2T(n/4) + n",["Θ(n)","Θ(n lg n)","Θ(√n)","Θ(√n lg n)"],"n^(log₄2) = √n, og f(n) = n dominerer: tilfelle 3."],
+["Rekurrenser","T(n) = 2T(n/4) + √n",["Θ(√n lg n)","Θ(√n)","Θ(n)","Θ(lg n)"],"n^(log₄2) = √n = f(n): tilfelle 2."],
+["Rekurrenser","T(n) = 7T(n/2) + n² (Strassen)",["Θ(n^lg 7) ≈ Θ(n^2,81)","Θ(n³)","Θ(n² lg n)","Θ(n²)"],"n^(log₂7) dominerer n²: tilfelle 1."],
+
+// ---------- Datastrukturer ----------
+["Datastrukturer","Største fordel med en tabell (array) fremfor en lenket liste?",["Oppslag på indeks i konstant tid","Innsetting i midten på O(1)","Den kan vokse uten kopiering","Den bruker alltid mindre minne"],"Lenket liste: O(1) innsetting og sletting gitt en peker, men Θ(n) for å nå indeks i. Eksamen des 2023 og aug 2025."],
+["Datastrukturer","Krav i en maks-haug når x er forelder til y og z?",["x ≥ y og x ≥ z, og ingen krav mellom y og z","x ≥ y ≥ z","y ≤ x ≤ z","x > y + z"],"Haugegenskapen gjelder bare forelder mot barn. Eksamen des 2023."],
+["Datastrukturer","Haug lagret i en 1-indeksert tabell: hvor ligger forelderen og venstre barn til i?",["Forelder ⌊i/2⌋, venstre barn 2i","Forelder i − 1, venstre barn i + 1","Forelder 2i, venstre barn ⌊i/2⌋","Forelder ⌊i/2⌋, venstre barn 2i + 1"],"Høyre barn er 2i + 1."],
+["Datastrukturer","Hvordan lager du en stakk med en maks-haug?",["Gi hvert nytt element en prioritet høyere enn alle før (en teller som øker)","Gi alle samme prioritet","Bruk elementets verdi som prioritet","Gi nye elementer lavere prioritet"],"Sist inn har høyest prioritet og tas ut først. Med synkende prioritet får du en kø. Eksamen des 2024."],
+["Datastrukturer","Kan en min-haug gjøres om til en maks-haug på O(n)?",["Ja, kjør Build-Max-Heap på tabellen","Nei, det krever Ω(n lg n)","Bare hvis alle elementene er like","Ja, ved å reversere tabellen"],"Build-Max-Heap er O(n) på hvilken som helst tabell. Eksamen aug 2026."],
+["Datastrukturer","Hva betyr det at nøklene k₁ og k₂ kolliderer?",["k₁ ≠ k₂, men h(k₁) = h(k₂)","k₁ = k₂","h(k₁) ≠ h(k₂)","Tabellen er full"],"Eksamen aug 2024."],
+["Datastrukturer","Forventet tid for søk i en hashtabell med kjeding (simple uniform hashing)?",["Θ(1 + α), der α = n/m","Θ(lg n)","Θ(n)","Θ(1) også i verste tilfelle"],"Verste tilfelle er Θ(n) når alt havner i samme kjede."],
+["Datastrukturer","h(k) = min{m, 2k}. Hvor god er hashfunksjonen?",["Elendig: nesten alle store nøkler havner på m, og bare partallsplasser brukes","God, fordi den er rask","God, fordi den er injektiv","Grei, med lineær probing"],"Spredningen er svært dårlig, og m er ikke engang en gyldig indeks i 0…m−1. Eksamen des 2024."],
+["Datastrukturer","«while x.left ≠ nil: x = x.left; return x». Hva gjør den?",["Finner minste nøkkel i et binært søketre (Tree-Minimum)","Finner roten","Finner forgjengeren","Sjekker om treet er balansert"],"Eksamen des 2024."],
+["Datastrukturer","Søk i et BST bygget med Tree-Insert av en tilfeldig permutasjon av 1…n?",["Beste Θ(1), verste Θ(n), forventet Θ(lg n)","Alltid Θ(lg n)","Alltid Θ(n)","Beste Θ(lg n), verste Θ(n lg n)"],"Treet kan i prinsippet bli en lang kjede, men forventet høyde er Θ(lg n). Eksamen aug 2025."],
+["Datastrukturer","Hva skjer med foreldrepekerne når Find-Set bruker stikomprimering?",["Alle noder på stien til roten peker direkte til roten etterpå","Bare den første noden peker til roten","Ingenting endres","Roten flyttes"],"Eksamen des 2023 og des 2025."],
+["Datastrukturer","Høyden til en haug med n elementer?",["⌊lg n⌋","n","√n","lg lg n"],"En haug er et nesten komplett binærtre."],
+
+// ---------- Spenntrær ----------
+["Spenntrær","Hva er et spenntre?",["En asyklisk sammenhengende delgraf som inneholder alle nodene","En korteste-vei-tre","En sykel gjennom alle nodene","En mengde kanter med minst vekt"],"Har nøyaktig |V| − 1 kanter. Eksamen aug 2023."],
+["Spenntrær","Hva kreves av snittet (S, V − S) for at den letteste kanten over det skal være trygg å legge til A?",["Snittet respekterer A: ingen kant i A krysser det","Snittet må dele grafen i to like store deler","A må være tom","S må inneholde rotnoden"],"Det er grunnlaget for Generic-MST, Kruskal og Prim. Eksamen des 2024."],
+["Spenntrær","Prim og Kruskal kjøres på en usammenhengende graf. Hvem gir et MST for hver komponent?",["Kruskal","Prim","Begge","Ingen"],"Kruskal ser på alle kantene globalt. Prim vokser bare fra én rot. Eksamen aug 2024."],
+["Spenntrær","Smartnes vil ha stier fra s der overlappende deler telles én gang, med minst mulig total vekt. Hva bruker han?",["Et minimalt spenntre","Dijkstra","Bellman-Ford","BFS"],"Summen av unike kanter som forbinder alle nodene er nettopp MST-vekten. Eksamen des 2023."],
+["Spenntrær","Prim der w(u, v) byttes ut med u.key + w(u, v). Hva får du?",["Fortsatt et spenntre, men ikke nødvendigvis minimalt (likner Dijkstra)","Et minimalt spenntre","Ikke et spenntre","Korteste vei-treet, alltid minimalt"],"Det blir i praksis Dijkstra: π-pekerne danner fortsatt et spenntre, men det minimerer stilengder, ikke total kantvekt. Eksamen aug 2026."],
+["Spenntrær","Hvilken datastruktur bruker Kruskal for å sjekke sykler?",["Disjunkte mengder (Union/Find-Set)","En prioritetskø","En stakk","En hashtabell"],"Kanten (u, v) legges til hvis Find-Set(u) ≠ Find-Set(v)."],
+
+// ---------- DP og grådig ----------
+["DP og grådig","Hva mangler i LCS-rekursjonen når x_i = y_j?",["c[i−1, j−1] + 1","max(c[i−1, j], c[i, j−1])","c[i−1, j−1]","0"],"Like tegn forlenger den felles delsekvensen med 1. Eksamen des 2025."],
+["DP og grådig","To egenskaper som gjør dynamisk programmering nyttig?",["Optimal delstruktur og overlappende delproblemer","Grådighetsegenskapen og stabilitet","Splitt og hersk og randomisering","Lineær tid og konstant minne"],"Uten overlapp er det ren splitt og hersk, og memoisering hjelper ikke."],
+["DP og grådig","Når hjelper memoisering lite?",["Når delproblemene nesten aldri gjentar seg","Når rekursjonen er dyp","Når input er sortert","Når svaret er et heltall"],"Permutasjoner av S: delmengdene gjentar seg, men det er 2^n av dem, så minnet eksploderer. Eksamen aug 2023."],
+["DP og grådig","Fractional knapsack: v = ⟨32, 30, 45⟩, w = ⟨8, 12, 15⟩, W = 20. Optimal verdi?",["68","62","77","75"],"Kilopris 4, 2,5 og 3. Ta hele gjenstand 1 (32) og 12/15 av gjenstand 3 (36). Eksamen aug 2026."],
+["DP og grådig","Hvorfor fungerer ikke grådig valg på 0-1-ryggsekk?",["Du kan ikke ta deler av en gjenstand, så den beste kiloprisen kan sløse kapasitet","Den har ikke optimal delstruktur","Grådig er for tregt","Den fungerer alltid"],"Fractional knapsack har grådighetsegenskapen. 0-1 trenger DP."],
+["DP og grådig","Aktivitetsutvelgelse: hvilket grådig valg er riktig?",["Velg aktiviteten som slutter tidligst","Velg den korteste","Velg den som starter tidligst","Velg den med færrest konflikter"],"Det gir mest plass igjen til resten. Konsertoppgaven (des 2023) var akkurat dette."],
+["DP og grådig","Hva slår Huffman sammen i hvert steg?",["De to nodene med lavest frekvens","De to med høyest frekvens","Den høyeste og den laveste","To tilfeldige"],"Sjeldne tegn havner dypt i treet og får lange koder."],
+["DP og grådig","Stavkapping: s = ⟨1,2,3,1,2,3,1,2⟩ for j = 1…8. Hvilke biter gir lengde 8?",["2, 3, 3","2, 2, 2, 2","1, 1, 3, 3","1, 3, 4"],"s[8] = 2 gir rest 6, s[6] = 3 gir rest 3, s[3] = 3. Eksamen aug 2026."],
+["DP og grådig","Boder i en ring, ikke to naboer, maks profitt. Hvordan?",["DP to ganger: én der bod 1 er utelatt og én der bod n er utelatt, og ta den beste. Θ(n)","Grådig: velg den beste boden først","Maks flyt","Det er NP-hardt"],"Den lineære varianten: best(i) = max(best(i−1), best(i−2) + pᵢ). Ringen brytes opp ved å utelate én av endene. Eksamen aug 2026."],
+["DP og grådig","Antenner: maksimer minste avstand, k av n punkter, Θ(n lg m). Hvordan?",["Binærsøk på d i [0, m] og sjekk grådig om k antenner får plass med avstand ≥ d","DP over alle delmengder","Sorter og ta hvert (n/k)-te punkt","Maks flyt"],"Hver sjekk er Θ(n), og binærsøket har lg m steg. Eksamen aug 2026."],
+
+// ---------- Matching ----------
+["Matching","Hva er et blokkerende par i stabil matching?",["En mann og en kvinne som begge foretrekker hverandre fremfor partnerne sine","To som er matchet med hverandre","Et par der den ene er misfornøyd","To menn som vil ha samme kvinne"],"En matching er stabil hvis det ikke finnes noe blokkerende par."],
+["Matching","Finnes det alltid en stabil matching om det er uavgjort i noen rangeringer?",["Ja: bryt uavgjort vilkårlig og kjør Gale-Shapley","Nei, det kan bli umulig","Bare hvis alle har uavgjort","Bare med maks flyt"],"Et blokkerende par i den opprinnelige instansen vil også være blokkerende i den brutte. Eksamen des 2023."],
+["Matching","Kan du få en ustabil matching med bare to par?",["Ja: hvis m₁ og k₂ foretrekker hverandre fremfor partnerne sine","Nei, med to par er alt stabilt","Bare hvis alle har like preferanser","Bare med uavgjort"],"Eksamen aug 2025."],
+["Matching","Hvem får sitt beste stabile valg i Gale-Shapley?",["Den siden som frir","Den siden som tar imot","Begge sider like mye","Tilfeldig"],"Frierne får sin best mulige stabile partner, mottakerne sin dårligste."]
+];
+
+const MESTRET = 2, EKS_N = 20, EKS_KRAV = 17;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const shuffle = a => { for (let k = a.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [a[k], a[j]] = [a[j], a[k]]; } return a; };
+const temaer = [...new Set(Q.map(q => q[0]))];
+const idag = () => new Date().toISOString().slice(0, 10);
+
+// ---------- tema (lys/mørk) ----------
+const temaValg = ["system", "light", "dark"], temaNavn = { system: "Auto", light: "Lys", dark: "Mørk" };
+let tema = (() => { try { return localStorage.getItem("algdat-tema") || "system"; } catch { return "system"; } })();
+function settTema(t) {
+  tema = t;
+  if (t === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  try { t === "system" ? localStorage.removeItem("algdat-tema") : localStorage.setItem("algdat-tema", t); } catch {}
+}
+const temaKnapp = () => `<button class="icon-btn" id="tema" aria-label="Bytt fargetema">Tema: ${temaNavn[tema]}</button>`;
+function koblTema() { const b = $("#tema"); if (b) b.onclick = () => { settTema(temaValg[(temaValg.indexOf(tema) + 1) % 3]); b.innerHTML = `Tema: ${temaNavn[tema]}`; }; }
+
+// ---------- bruker og lagring ----------
+let bruker = (() => { try { return localStorage.getItem("algdat-bruker"); } catch { return null; } })();
+let D = { st: {}, eks: [], dager: [] };
+const lokalKey = u => "algdat-pugg-v3:" + u;
+let syncStatus = "";
+
+async function api(path, opt = {}) {
+  const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    ...opt,
+    headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json", ...(opt.headers || {}) }
+  });
+  if (!r.ok) throw new Error(r.status + " " + await r.text());
+  return r.status === 204 ? null : r.json();
+}
+
+async function lastBruker(u) {
+  try { D = JSON.parse(localStorage.getItem(lokalKey(u))) || D; } catch {}
+  if (!ONLINE) return;
+  try {
+    const rows = await api("progress?select=state&username=eq." + encodeURIComponent(u));
+    if (rows[0] && rows[0].state) D = rows[0].state;
+    syncStatus = "Lagret på serveren";
+  } catch (e) { syncStatus = "Fikk ikke kontakt med serveren, lagrer lokalt"; }
+}
+
+function oppsummer() {
+  const n = Q.length, t = telling(Q.map((_, i) => i));
+  return {
+    username: bruker, mastered: t.m, total: n,
+    best_exam: D.eks.length ? Math.max(...D.eks.map(e => e.r)) : 0,
+    exams: D.eks.length, streak: streak(), state: D, updated_at: new Date().toISOString()
+  };
+}
+let syncTimer = null;
+function lagre() {
+  try { localStorage.setItem(lokalKey(bruker), JSON.stringify(D)); } catch {}
+  if (!ONLINE) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      await api("progress", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(oppsummer()) });
+      syncStatus = "Lagret på serveren";
+    } catch { syncStatus = "Fikk ikke lagret på serveren, prøver igjen ved neste svar"; }
+    const s = $("#sync"); if (s) s.textContent = syncStatus;
+  }, 800);
+}
+
+async function hentLeaderboard() {
+  if (!ONLINE) return EKSEMPEL.map(r => ({ ...r, eksempel: true })).concat([{ ...oppsummer(), me: true }])
+    .sort((a, b) => b.mastered - a.mastered || b.best_exam - a.best_exam);
+  const rows = await api("progress?select=username,mastered,total,best_exam,exams,streak&order=mastered.desc,best_exam.desc&limit=100");
+  return rows.map(r => r.username === bruker ? { ...oppsummer(), me: true } : r);
+}
+const EKSEMPEL = [
+  { username: "kariaas", mastered: 97, total: 123, best_exam: 19, exams: 8, streak: 6 },
+  { username: "olavhn", mastered: 81, total: 123, best_exam: 18, exams: 5, streak: 3 },
+  { username: "sigridmk", mastered: 64, total: 123, best_exam: 17, exams: 4, streak: 9 },
+  { username: "magnuslb", mastered: 40, total: 123, best_exam: 14, exams: 2, streak: 1 },
+  { username: "idaeng", mastered: 22, total: 123, best_exam: 12, exams: 1, streak: 0 }
+];
+
+// ---------- fremdrift ----------
+const status = i => { const s = D.st[i]; if (!s || !s.s) return "u"; if (s.c >= MESTRET) return "m"; if (s.c === 0) return "b"; return "p"; };
+function telling(idx) { const t = { m: 0, p: 0, b: 0, u: 0 }; idx.forEach(i => t[status(i)]++); return t; }
+function registrer(i, ok) {
+  const s = D.st[i] || (D.st[i] = { s: 0, c: 0 });
+  s.s++; s.c = ok ? s.c + 1 : 0;
+  if (!D.dager.includes(idag())) D.dager.push(idag());
+  lagre();
+}
+function streak() {
+  const set = new Set(D.dager); let n = 0; const d = new Date();
+  if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1);
+  while (set.has(d.toISOString().slice(0, 10))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+const seg = (t, n, cls = "") => `<div class="seg ${cls}" role="img" aria-label="${t.m} mestret, ${t.p} på vei, ${t.b} feil sist, ${t.u} ikke sett">
+  <i class="m" style="width:${t.m / n * 100}%"></i><i class="p" style="width:${t.p / n * 100}%"></i><i class="b" style="width:${t.b / n * 100}%"></i></div>`;
+
+// ---------- innlogging ----------
+function login() {
+  $("#app").innerHTML = `
+  <div class="bar-top"><h1>AlgDat-pugg</h1>${temaKnapp()}</div>
+  <form class="panel login" id="f">
+    <h2>Logg inn med NTNU-brukernavn</h2>
+    <p class="muted" style="margin:0">Fremgangen din lagres på brukernavnet, og du havner på leaderboardet med de andre. Ingen passord.</p>
+    <label for="u">Brukernavn</label>
+    <input id="u" name="u" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="f.eks. nicolaok" value="${esc(bruker || "")}">
+    <p class="err" id="err" hidden></p>
+    <button class="btn primary" type="submit">Start</button>
+    <p class="note">${Q.length} flervalgsspørsmål fra TDT4120-eksamenene 2023–2026.</p>
+  </form>`;
+  koblTema();
+  $("#u").focus();
+  $("#f").onsubmit = async e => {
+    e.preventDefault();
+    const u = $("#u").value.trim().toLowerCase();
+    if (!/^[a-z0-9]{2,20}$/.test(u)) { const er = $("#err"); er.hidden = false; er.textContent = "Bruk NTNU-brukernavnet ditt: små bokstaver og tall, uten @ntnu.no."; return; }
+    bruker = u; try { localStorage.setItem("algdat-bruker", u); } catch {}
+    D = { st: {}, eks: [], dager: [] };
+    await lastBruker(u);
+    hjem();
+  };
+}
+
+// ---------- hjem ----------
+async function hjem() {
+  økt = null;
+  const alle = Q.map((_, i) => i), t = telling(alle), n = Q.length;
+  const pct = Math.round(t.m / n * 100);
+  const bom = alle.filter(i => status(i) === "b").length;
+  const svakest = temaer.map(te => { const ix = alle.filter(i => Q[i][0] === te); return [te, telling(ix).m / ix.length]; }).sort((a, b) => a[1] - b[1])[0];
+  const eks = D.eks.slice(-12);
+  const beste = D.eks.length ? Math.max(...D.eks.map(e => e.r)) : null;
+  $("#app").innerHTML = `
+  <div class="bar-top"><h1>AlgDat-pugg</h1>
+    <div class="who"><span class="chipu">${esc(bruker)}</span><button class="icon-btn" id="ut">Bytt bruker</button>${temaKnapp()}</div></div>
+  <div class="grid">
+   <div class="col">
+    <section class="panel">
+      <div class="row between" style="align-items:flex-end">
+        <div><div class="big">${pct} %</div><div class="muted">mestret (${t.m} av ${n})</div></div>
+        <div class="muted" style="text-align:right;font-size:.9rem">Mestret = riktig ${MESTRET} ganger på rad</div>
+      </div>
+      ${seg(t, n)}
+      <div class="legend">
+        <span style="--c:var(--ok)">Mestret ${t.m}</span><span style="--c:var(--mid)">På vei ${t.p}</span>
+        <span style="--c:var(--bad)">Feil sist ${t.b}</span><span style="--c:var(--track)">Ikke sett ${t.u}</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>${streak()}</b><span>dager på rad</span></div>
+        <div class="stat"><b>${D.eks.length}</b><span>prøver</span></div>
+        <div class="stat"><b>${beste === null ? "–" : beste + "/" + EKS_N}</b><span>beste prøve</span></div>
+      </div>
+      <span class="sync" id="sync">${ONLINE ? esc(syncStatus) : "Ikke koblet til databasen ennå, lagres bare i denne nettleseren"}</span>
+    </section>
+    <div class="actions">
+      <button class="btn primary" id="goEks">Prøveeksamen<small>${EKS_N} spørsmål, bestått ved ${EKS_KRAV}</small></button>
+      <button class="btn" id="goMix">Øv blandet<small>15 spørsmål, svakeste først</small></button>
+      <button class="btn" id="goBom" ${bom ? "" : "disabled"}>Repeter feil<small>${bom} du svarte feil på sist</small></button>
+    </div>
+    <section class="panel">
+      <div class="row between"><h2>Temaer</h2><span class="muted" style="font-size:.85rem">Svakest nå: ${esc(svakest[0])}</span></div>
+      <div class="temaer">${temaer.map(te => {
+        const ix = alle.filter(i => Q[i][0] === te), tt = telling(ix);
+        return `<button class="tema" data-t="${esc(te)}"><span>${esc(te)}${tt.m === ix.length ? '<span class="badge ok">Mestret</span>' : ""}</span><span class="n">${tt.m} / ${ix.length}</span>${seg(tt, ix.length, "thin")}</button>`;
+      }).join("")}</div>
+    </section>
+   </div>
+   <div class="col">
+    <section class="panel">
+      <div class="row between"><h2>Leaderboard</h2><span class="muted" style="font-size:.85rem">Rangert på mestrede spørsmål</span></div>
+      <div id="lb"><p class="muted" style="margin:0">Henter …</p></div>
+    </section>
+    <section class="panel">
+      <h2>Dine prøveeksamener</h2>
+      ${eks.length ? `<div class="chart">
+        <div class="line" style="bottom:${EKS_KRAV / EKS_N * 100}%"></div><div class="linelbl" style="bottom:${EKS_KRAV / EKS_N * 100}%">krav ${EKS_KRAV}</div>
+        ${eks.map(e => `<div class="col" title="${e.d}: ${e.r}/${EKS_N}"><span class="lbl" style="bottom:calc(${Math.max(e.r / EKS_N * 100, 2)}% + 2px)">${e.r}</span><div class="bar ${e.r >= EKS_KRAV ? "pass" : ""}" style="height:${Math.max(e.r / EKS_N * 100, 2)}%"></div></div>`).join("")}
+      </div><p class="hint">Siste ${eks.length} prøver, eldst til venstre.</p>`
+      : `<p class="muted" style="margin:0">Ingen prøver tatt ennå. Resultatene havner her som søyler mot kravet på ${EKS_KRAV} av ${EKS_N}.</p>`}
+    </section>
+    <button class="danger" id="reset">Nullstill fremgangen min</button>
+   </div>
+  </div>`;
+  koblTema();
+  $("#ut").onclick = () => { try { localStorage.removeItem("algdat-bruker"); } catch {} ; login(); };
+  $("#goEks").onclick = () => startØkt("eks");
+  $("#goMix").onclick = () => startØkt("øv", null);
+  $("#goBom").onclick = () => startØkt("bom");
+  document.querySelectorAll(".tema").forEach(b => b.onclick = () => startØkt("øv", b.dataset.t));
+  $("#reset").onclick = () => {
+    const b = $("#reset");
+    if (b.dataset.sure) { D = { st: {}, eks: [], dager: [] }; lagre(); hjem(); }
+    else { b.dataset.sure = 1; b.textContent = "Trykk igjen for å slette alt"; }
+  };
+  try { tegnLb(await hentLeaderboard()); }
+  catch { const el = $("#lb"); if (el) el.innerHTML = `<p class="err">Fikk ikke hentet leaderboardet. Sjekk nettet og last inn siden på nytt.</p>`; }
+}
+
+function tegnLb(rows) {
+  const el = $("#lb"); if (!el) return;
+  if (!rows.length) { el.innerHTML = `<p class="muted" style="margin:0">Ingen her ennå. Svar på et spørsmål, så er du først.</p>`; return; }
+  const eksempel = rows.some(r => r.eksempel);
+  el.innerHTML = `<div class="lbhead"><span>#</span><span>Bruker</span><span>Mestret</span><span>Beste prøve</span></div>
+  <div class="lb">${rows.map((r, k) => {
+    const p = Math.round(r.mastered / (r.total || Q.length) * 100);
+    return `<div class="r ${r.me ? "me" : ""}"><span class="rank">${k + 1}</span><span class="nm">${esc(r.username)}${r.me ? " (deg)" : ""}</span>
+      <span class="pct">${p} %</span><span class="sub2">${r.exams ? r.best_exam + "/" + EKS_N : "–"}</span>
+      <span></span><div class="mini"><i style="width:${p}%"></i></div></div>`;
+  }).join("")}</div>
+  ${eksempel ? `<p class="note">De andre radene er eksempeldata til databasen er koblet til.</p>` : ""}`;
+}
+
+// ---------- økt ----------
+let økt = null;
+function startØkt(type, tema) {
+  let ix = Q.map((_, i) => i);
+  if (tema) ix = ix.filter(i => Q[i][0] === tema);
+  if (type === "eks") ix = shuffle(ix).slice(0, EKS_N);
+  else if (type === "bom") ix = shuffle(ix.filter(i => status(i) === "b"));
+  else { const rang = { b: 0, u: 1, p: 2, m: 3 }; ix = shuffle(shuffle(ix).sort((a, b) => rang[status(a)] - rang[status(b)]).slice(0, 15)); }
+  økt = { type, tema, ix, i: 0, riktig: 0, svar: [], låst: false };
+  vis();
+}
+function vis() {
+  const ø = økt;
+  if (ø.i >= ø.ix.length) return slutt();
+  const idx = ø.ix[ø.i], [te, sp, alts] = Q[idx];
+  ø.låst = false; ø.ordning = shuffle(alts.map((_, k) => k));
+  const tittel = ø.type === "eks" ? "Prøveeksamen" : ø.type === "bom" ? "Repeter feil" : (ø.tema || "Blandet");
+  const st = status(idx);
+  $("#app").innerHTML = `<div class="quizwrap">
+  <div class="top"><button class="back" id="back">← Avslutt</button>
+    <div class="seg thin"><i class="m" style="width:${ø.i / ø.ix.length * 100}%;background:var(--accent)"></i></div>
+    <span class="muted" style="font-variant-numeric:tabular-nums">${ø.i + 1}/${ø.ix.length}</span></div>
+  <section class="panel">
+    <div class="meta"><span>${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " · " + esc(te) : ""}</span><span>${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : ""}</span></div>
+    <p class="q">${esc(sp)}</p>
+    <div class="opts">${ø.ordning.map((k, n) => `<button class="opt" data-k="${k}"><span class="k">${n + 1}</span><span>${esc(alts[k])}</span></button>`).join("")}</div>
+    <div class="why" id="why" hidden></div>
+  </section>
+  <p class="hint">Tastatur: 1–4 velger svar, Enter går videre.${ø.type === "eks" ? " På prøveeksamen får du fasit først til slutt." : ""}</p></div>`;
+  $("#back").onclick = hjem;
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => svar(+b.dataset.k));
+}
+function svar(k) {
+  const ø = økt; if (ø.låst) return; ø.låst = true;
+  const idx = ø.ix[ø.i], [, , alts, why] = Q[idx], ok = k === 0;
+  if (ok) ø.riktig++;
+  ø.svar.push({ idx, k, ok });
+  registrer(idx, ok);
+  if (ø.type === "eks") {
+    document.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (+b.dataset.k === k) b.classList.add("picked"); });
+    setTimeout(() => { ø.i++; vis(); }, 220);
+    return;
+  }
+  document.querySelectorAll(".opt").forEach(b => { b.disabled = true; const bk = +b.dataset.k; if (bk === 0) b.classList.add("right"); else if (bk === k) b.classList.add("wrong"); });
+  const s = D.st[idx], w = $("#why"); w.hidden = false;
+  w.innerHTML = `<p class="verdict ${ok ? "ok" : "no"}">${ok ? (s.c >= MESTRET ? "Riktig, og nå mestret." : `Riktig. ${MESTRET - s.c} til på rad for å mestre.`) : "Feil. Riktig svar: " + esc(alts[0])}</p>
+    <p>${esc(why)}</p><div><button class="btn primary" id="next">Neste</button></div>`;
+  $("#next").onclick = () => { ø.i++; vis(); };
+  $("#next").focus();
+}
+function slutt() {
+  const ø = økt, n = ø.ix.length;
+  if (ø.type === "eks" && !ø.lagret) { ø.lagret = true; D.eks.push({ d: idag(), r: ø.riktig }); lagre(); }
+  const feil = ø.svar.filter(s => !s.ok), bestått = ø.riktig >= EKS_KRAV;
+  $("#app").innerHTML = `<div class="quizwrap"><section class="panel result">
+    <div class="big">${ø.riktig} / ${n}</div>
+    ${ø.type === "eks" ? `<span class="pill ${bestått ? "ok" : "no"}">${bestått ? "Bestått" : "Ikke bestått"}</span><p class="muted" style="margin:0">Krav: ${EKS_KRAV} av ${EKS_N}.</p>`
+      : `<p class="muted" style="margin:0">${Math.round(ø.riktig / n * 100)} % riktig denne runden.</p>`}
+    <div class="row" style="justify-content:center"><button class="btn primary" id="home">Til oversikten</button><button class="btn" id="again">${ø.type === "eks" ? "Ny prøve" : "Ny runde"}</button></div>
+    ${feil.length ? `<div class="review"><h2>Det du bommet på</h2>${feil.map(s => { const [te, sp, alts, why] = Q[s.idx];
+      return `<div class="item"><span class="muted" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.05em">${esc(te)}</span><p><b>${esc(sp)}</b></p><p style="color:var(--bad)">Du svarte: ${esc(alts[s.k])}</p><p style="color:var(--ok)">Riktig: ${esc(alts[0])}</p><p class="muted">${esc(why)}</p></div>`; }).join("")}</div>` : ""}
+  </section></div>`;
+  $("#home").onclick = hjem;
+  $("#again").onclick = () => startØkt(ø.type, ø.tema);
+}
+document.addEventListener("keydown", e => {
+  if (!økt || økt.i >= økt.ix.length) return;
+  if (!økt.låst && /^[1-4]$/.test(e.key)) { const b = document.querySelectorAll(".opt")[+e.key - 1]; if (b) b.click(); }
+  else if (økt.låst && e.key === "Enter" && $("#next") && document.activeElement !== $("#next")) $("#next").click();
+});
+
+(async () => { if (bruker) { await lastBruker(bruker); hjem(); } else login(); })();
+</script>
+</body>
+</html>

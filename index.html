@@ -295,6 +295,167 @@ const Q = [
 ["Matching","Hvem får sitt beste stabile valg i Gale-Shapley?",["Den siden som frir","Den siden som tar imot","Begge sider like mye","Tilfeldig"],"Frierne får sin best mulige stabile partner, mottakerne sin dårligste.",""]
 ];
 
+// ---------- Egenskaper: kjøretid, minne og stabilitet for algoritmene i boka ----------
+// Genereres fra én tabell så svarene er konsistente på tvers av spørsmålene. Spørsmålene legges
+// bakerst i Q, fordi lagret fremgang refererer til spørsmålene med indeks.
+// Gjennomsnittlig tilfelle spørres bare om der boka definerer det (sortering, utvalg, søk);
+// for deterministiske grafalgoritmer gir boka bare kjøretiden, ofte som O.
+const POOL = {
+  n: ["Θ(1)", "Θ(lg n)", "Θ(n)", "Θ(n lg n)", "Θ(n²)", "Θ(n³)"],
+  k: ["Θ(k)", "Θ(n)", "Θ(n + k)", "Θ(n lg n)", "Θ(n · k)", "Θ(d(n + k))", "Θ(d · n lg n)"],
+  h: ["Θ(1)", "Θ(1 + α)", "Θ(lg n)", "Θ(n)", "Θ(n lg n)"],
+  g: ["Θ(V)", "Θ(E)", "Θ(V + E)", "O(E lg V)", "O((V + E) lg V)", "O(E |f*|)", "O(V E)", "Θ(V²)", "O(V E²)", "Θ(V³)", "Θ(V³ lg V)", "Θ(V⁴)"],
+  gm: ["Θ(1)", "Θ(V)", "Θ(V + E)", "Θ(V²)", "Θ(V³)"],
+  mn: ["Θ(m + n)", "Θ(mn)", "Θ(mn lg n)", "Θ(m²n²)", "Θ(2^m)"],
+  nW: ["Θ(n + W)", "Θ(nW)", "Θ(n lg W)", "Θ(nW²)", "Θ(2^n)"]
+};
+// Like for sammenhengende grafer, så de kan ikke stå som feilsvar for hverandre.
+const LIKE = [["Θ(V + E)", "Θ(E)"], ["O(E lg V)", "O((V + E) lg V)"]];
+const ALG = [
+ { t: "Egenskaper: sortering", navn: "Insertion-Sort", p: "n",
+   beste: ["Θ(n)", "Allerede sortert input: while-løkka stopper med en gang for hvert element, så det blir bare n − 1 sammenligninger."],
+   snitt: ["Θ(n²)", "I snitt må hvert element flyttes forbi halvparten av elementene foran seg, ca. n²/4 flyttinger totalt. Konstanten forsvinner i Θ."],
+   verste: ["Θ(n²)", "Baklengs sortert input: element nr. i må flyttes forbi alle i − 1 foran seg, og 1 + 2 + … + (n − 1) = Θ(n²)."],
+   minne: ["Θ(1)", "Den sorterer på plass og trenger bare noen få hjelpevariabler (key, i, j)."],
+   stabil: [true, "Et element flyttes bare forbi elementer som er strengt større (A[i] > key), så like elementer bytter aldri plass."] },
+ { t: "Egenskaper: sortering", navn: "Merge-Sort", p: "n",
+   alle: ["Θ(n lg n)", "Rekurrensen T(n) = 2T(n/2) + Θ(n) er den samme uansett input: lg n nivåer med Θ(n) fletting på hvert."],
+   minne: ["Θ(n)", "Merge kopierer delene over i hjelpetabellene L og R, som til sammen er like store som delen som flettes. Rekursjonsstakken er bare Θ(lg n)."],
+   stabil: [true, "Merge tar fra venstre del ved likhet (L[i] ≤ R[j]), så like elementer beholder rekkefølgen."] },
+ { t: "Egenskaper: sortering", navn: "Heapsort (distinkte nøkler)", kort: "Heapsort", p: "n",
+   alle: ["Θ(n lg n)", "Build-Max-Heap tar Θ(n), og deretter kommer n − 1 kall til Max-Heapify på O(lg n). Med distinkte nøkler er også beste tilfelle Θ(n lg n). Er alle nøklene like, stopper Max-Heapify med en gang, og det blir Θ(n)."],
+   minne: ["Θ(1)", "Haugen ligger i selve tabellen, og den sorterte delen bygges bakerst i den samme tabellen. Bokas Max-Heapify er rekursiv og bruker O(lg n) stakk, men kan skrives som en løkke.", ["Θ(lg n)"]],
+   stabil: [false, "Når roten byttes med siste element, flyttes elementer langt. Eksempel: ⟨2a, 2b, 1⟩ er en makshaug og ender som ⟨1, 2b, 2a⟩."] },
+ { t: "Egenskaper: sortering", navn: "Quicksort", p: "n",
+   beste: ["Θ(n lg n)", "Pivoten havner midt i hver gang, så T(n) = 2T(n/2) + Θ(n)."],
+   snitt: ["Θ(n lg n)", "I snitt over alle permutasjoner av input blir splittene gode nok. Selv en fast 9:1-splitt gir Θ(n lg n)."],
+   verste: ["Θ(n²)", "Sortert input eller alle like elementer: pivoten (siste element) havner ytterst hver gang, og splitten blir n − 1 og 0."],
+   minne: ["Θ(n)", "Partition jobber på plass, men rekursjonsstakken blir n dyp når splittene er så skjeve som mulig. Med jevne splitter er den Θ(lg n)."],
+   stabil: [false, "Partition bytter elementer over lange avstander. Eksempel: ⟨2a, 2b, 1⟩ med pivot 1 blir ⟨1, 2b, 2a⟩."] },
+ { t: "Egenskaper: sortering", navn: "Randomized-Quicksort", p: "n", snittNavn: "forventet kjøretid",
+   beste: ["Θ(n lg n)", "Heldige pivotvalg som deler midt på hver gang gir T(n) = 2T(n/2) + Θ(n)."],
+   snitt: ["Θ(n lg n)", "Forventningen tas over algoritmens egne tilfeldige pivotvalg, for hvert eneste input (med distinkte elementer). Ingen input er spesielt dårlig."],
+   verste: ["Θ(n²)", "Uflaks med alle pivotvalgene gir fortsatt Θ(n²), bare svært usannsynlig. Er alle elementene like, hjelper ikke tilfeldig pivot."],
+   minne: ["Θ(n)", "Rekursjonsstakken kan bli n dyp hvis pivotvalgene er uheldige. Forventet dybde er Θ(lg n)."],
+   stabil: [false, "Partition bytter elementer over lange avstander, uansett hvordan pivoten velges."] },
+ { t: "Egenskaper: sortering", navn: "Counting-Sort", p: "k", mp: "k",
+   alle: ["Θ(n + k)", "Løkkene går over A (n elementer) og over tellearrayet C (k + 1 plasser), uansett hva som står i A."],
+   minne: ["Θ(n + k)", "Utdatatabellen B har n plasser og tellearrayet C har k + 1."],
+   stabil: [true, "Siste løkke går fra n ned til 1, så det siste av flere like elementer plasseres bakerst."] },
+ { t: "Egenskaper: sortering", navn: "Radix-Sort (d sifre i base k)", kort: "Radix-Sort", p: "k", mp: "k",
+   alle: ["Θ(d(n + k))", "d runder med Counting-Sort på Θ(n + k) hver, uansett input."],
+   minne: ["Θ(n + k)", "Hver runde trenger tabellene B og C fra Counting-Sort, og plassen kan gjenbrukes fra runde til runde."],
+   stabil: [true, "Hver runde bruker en stabil sortering, og det er nettopp derfor Radix-Sort fungerer. Da blir også resultatet stabilt."] },
+ { t: "Egenskaper: sortering", navn: "Bucket-Sort", p: "n", snittNavn: "kjøretid i gjennomsnittlig tilfelle (uniformt fordelt input)",
+   beste: ["Θ(n)", "Hvert element havner i hver sin bøtte, så alle bøttene er trivielle å sortere."],
+   snitt: ["Θ(n)", "Med uniformt fordelt input i [0, 1) havner forventet O(1) elementer i hver bøtte, så Insertion-Sort i bøttene tar forventet O(1) hver."],
+   verste: ["Θ(n²)", "Alt havner i samme bøtte, og Insertion-Sort på n elementer tar Θ(n²)."],
+   minne: ["Θ(n)", "n bøtter (lenkede lister) med n elementer til sammen."] },
+ { t: "Egenskaper: øvrige", navn: "Randomized-Select", p: "n", snittNavn: "forventet kjøretid",
+   beste: ["Θ(n)", "Den første tilfeldige pivoten er akkurat element nr. i, så det holder med én Partition."],
+   snitt: ["Θ(n)", "Den rekurserer bare på én side, og forventet blir delene en fast brøkdel mindre: n + n/2 + n/4 + … = Θ(n)."],
+   verste: ["Θ(n²)", "Uheldige pivoter fjerner bare ett element per runde, som i verste tilfelle av Quicksort."] },
+ { t: "Egenskaper: øvrige", navn: "Select (median av medianer)", kort: "Select", p: "n",
+   alle: ["Θ(n)", "Pivoten er garantert god nok til at en fast andel elementer forsvinner hver runde, så den er lineær også i verste tilfelle. Den må se på alle elementene, så den kan ikke bli raskere enn Θ(n)."] },
+ { t: "Egenskaper: øvrige", navn: "Build-Max-Heap", p: "n",
+   alle: ["Θ(n)", "De fleste nodene ligger nær bunnen og synker bare kort. Summen over alle høyder blir O(n), og hver node må uansett besøkes."] },
+ { t: "Egenskaper: øvrige", navn: "Max-Heapify", p: "n",
+   beste: ["Θ(1)", "Noden er allerede større enn barna sine, så den stopper etter én sammenligning."],
+   verste: ["Θ(lg n)", "Noden synker hele veien fra roten til et løv, og haugen har høyde ⌊lg n⌋."] },
+ { t: "Egenskaper: øvrige", navn: "Tree-Search i et binært søketre med n noder", kort: "Tree-Search", p: "n", snittNavn: "forventet kjøretid (tilfeldig bygd tre)",
+   beste: ["Θ(1)", "Nøkkelen ligger i roten."],
+   snitt: ["Θ(lg n)", "Et tre bygd ved å sette inn en tilfeldig permutasjon har forventet høyde Θ(lg n)."],
+   verste: ["Θ(n)", "Settes nøklene inn i sortert rekkefølge, blir treet en lang kjede med høyde n − 1."] },
+ { t: "Egenskaper: øvrige", navn: "Søk i en hashtabell med kjeding", kort: "Hashsøk med kjeding", p: "h", snittNavn: "kjøretid i gjennomsnittlig tilfelle (simple uniform hashing)",
+   beste: ["Θ(1)", "Kjeden er tom eller nøkkelen ligger først i den."],
+   snitt: ["Θ(1 + α)", "Med α = n/m har en kjede i snitt α elementer, pluss konstant tid for å regne ut hashverdien."],
+   verste: ["Θ(n)", "Alle n nøklene havner i samme kjede."] },
+ { t: "Egenskaper: grafer", navn: "BFS", p: "g", mp: "gm",
+   beste: ["Θ(V)", "Initialiseringen går gjennom alle nodene. Har s ingen naboer, er det alt som skjer."],
+   verste: ["Θ(V + E)", "Hver node legges i køen maks én gang, og hver naboliste gås gjennom én gang."],
+   minne: ["Θ(V)", "Køen og feltene farge, d og π for hver node. Nabolistene er input."] },
+ { t: "Egenskaper: grafer", navn: "DFS", p: "g", mp: "gm",
+   alle: ["Θ(V + E)", "Den ytre løkka starter DFS-Visit fra alle ubesøkte noder, så alle noder og alle nabolister gås gjennom nøyaktig én gang, uansett graf."],
+   minne: ["Θ(V)", "Farge, d, f og π for hver node, og rekursjonsstakken, som kan bli V dyp."] },
+ { t: "Egenskaper: grafer", navn: "Topological-Sort", p: "g", mp: "gm",
+   alle: ["Θ(V + E)", "Det er én DFS, og hver node settes først i en lenket liste på O(1) når den er ferdig."],
+   minne: ["Θ(V)", "Det samme som DFS, pluss den lenkede listen med V noder."] },
+ { t: "Egenskaper: grafer", navn: "Strongly-Connected-Components", p: "g", mp: "gm",
+   alle: ["Θ(V + E)", "To DFS-er og bygging av den transponerte grafen, alle på Θ(V + E)."],
+   minne: ["Θ(V + E)", "Den transponerte grafen Gᵀ har like mange noder og kanter som G."] },
+ { t: "Egenskaper: grafer", navn: "MST-Kruskal", p: "g", mp: "gm",
+   verste: ["O(E lg V)", "Sorteringen av kantene tar O(E lg E) = O(E lg V) og dominerer. Operasjonene på disjunkte mengder er nesten lineære."],
+   minne: ["Θ(V + E)", "Den sorterte kantlisten (E) og de disjunkte mengdene (V)."] },
+ { t: "Egenskaper: grafer", navn: "MST-Prim med binær min-haug", kort: "MST-Prim", p: "g", mp: "gm",
+   verste: ["O(E lg V)", "V Extract-Min og opptil E Decrease-Key, hver på O(lg V)."],
+   minne: ["Θ(V)", "Prioritetskøen og feltene key og π for hver node."] },
+ { t: "Egenskaper: grafer", navn: "Dijkstra med binær min-haug", kort: "Dijkstra", p: "g", mp: "gm",
+   verste: ["O((V + E) lg V)", "V Insert og Extract-Min og opptil E Decrease-Key, hver på O(lg V)."],
+   minne: ["Θ(V)", "Prioritetskøen og feltene d og π for hver node."] },
+ { t: "Egenskaper: grafer", navn: "Bellman-Ford", p: "g", mp: "gm",
+   verste: ["O(V E)", "|V| − 1 runder der alle E kanter slakkes, pluss en siste runde for å finne negative sykler."],
+   minne: ["Θ(V)", "Bare feltene d og π for hver node."] },
+ { t: "Egenskaper: grafer", navn: "DAG-Shortest-Paths", p: "g", mp: "gm",
+   alle: ["Θ(V + E)", "Topologisk sortering tar Θ(V + E), og deretter slakkes hver kant nøyaktig én gang."],
+   minne: ["Θ(V)", "Den topologiske rekkefølgen og feltene d og π for hver node."] },
+ { t: "Egenskaper: grafer", navn: "Floyd-Warshall", p: "g", mp: "gm",
+   alle: ["Θ(V³)", "Tre nøstede løkker over k, i og j, med konstant arbeid innerst, uansett graf."],
+   minne: ["Θ(V²)", "Det holder med én V × V-matrise som oppdateres underveis. Bokas pseudokode lager en ny matrise for hver k, men bare den forrige trengs."],
+   minneQ: "Floyd-Warshall: hvor mye minne trengs, når bare matrisen fra forrige k tas vare på?" },
+ { t: "Egenskaper: grafer", navn: "Slow-APSP", p: "g",
+   alle: ["Θ(V⁴)", "V − 2 kall til Extend-Shortest-Paths, som hver er en matrisemultiplikasjon på Θ(V³)."] },
+ { t: "Egenskaper: grafer", navn: "Faster-APSP", p: "g",
+   alle: ["Θ(V³ lg V)", "Gjentatt kvadrering: bare ⌈lg(V − 1)⌉ matrisemultiplikasjoner à Θ(V³)."] },
+ { t: "Egenskaper: grafer", navn: "Ford-Fulkerson med heltallskapasiteter", kort: "Ford-Fulkerson", p: "g", mp: "gm",
+   verste: ["O(E |f*|)", "Hver forøkende sti øker flyten med minst 1, så det blir maks |f*| iterasjoner med O(E) arbeid hver."],
+   minne: ["Θ(V + E)", "Restnettet har opptil to kanter for hver kant i G."] },
+ { t: "Egenskaper: grafer", navn: "Edmonds-Karp", p: "g", mp: "gm",
+   verste: ["O(V E²)", "Antall forøkende stier er O(VE), og hver finnes med BFS på O(E). Med heltallskapasiteter gjelder også Ford-Fulkersons grense O(E |f*|).", ["O(E |f*|)"]],
+   minne: ["Θ(V + E)", "Restnettet og køen og forgjengerne til BFS."] },
+ { t: "Egenskaper: øvrige", navn: "Gale-Shapley med n par", kort: "Gale-Shapley", p: "n",
+   verste: ["Θ(n²)", "Hver av de n frierne frir til hver kvinne maks én gang, og det finnes input der nesten alle n² frieriene skjer."] },
+ { t: "Egenskaper: øvrige", navn: "Huffman med n tegn (min-haug)", kort: "Huffman", p: "n",
+   verste: ["Θ(n lg n)", "n − 1 sammenslåinger, hver med to Extract-Min og én Insert på O(lg n)."] },
+ { t: "Egenskaper: øvrige", navn: "LCS for sekvenser av lengde m og n", kort: "LCS", p: "mn", mp: "mn",
+   alle: ["Θ(mn)", "Tabellen c har (m + 1)(n + 1) celler, og hver fylles på konstant tid, uansett innhold."],
+   minne: ["Θ(mn)", "Tabellene b og c har (m + 1)(n + 1) celler hver. Lengden alene kan regnes ut med to rader, men da kan ikke selve sekvensen gjenskapes direkte."] },
+ { t: "Egenskaper: øvrige", navn: "Bottom-up stavkapping (rod cutting) for lengde n", kort: "Bottom-up stavkapping", p: "n",
+   alle: ["Θ(n²)", "For hver lengde j prøves alle j mulige første kutt: 1 + 2 + … + n = Θ(n²)."],
+   minne: ["Θ(n)", "Tabellen r[0 : n] med de beste verdiene, og ev. s[0 : n] med de første kuttene."] },
+ { t: "Egenskaper: øvrige", navn: "0-1-ryggsekk med DP (n gjenstander, kapasitet W)", kort: "0-1-ryggsekk med DP", p: "nW", mp: "nW",
+   alle: ["Θ(nW)", "Tabellen har (n + 1)(W + 1) celler, og hver fylles på konstant tid."],
+   minne: ["Θ(nW)", "Hele tabellen trengs for å finne ut hvilke gjenstander som ble valgt. Bare verdien kan regnes ut med Θ(W) minne."] }
+];
+const likeVerdier = v => LIKE.find(par => par.includes(v)) || [v];
+function feilsvar(riktig, pool, unngå = []) {
+  // De nærmeste verdiene i poolen er de mest troverdige feilsvarene.
+  const sperret = new Set([...likeVerdier(riktig), ...unngå]), i = pool.indexOf(riktig);
+  return pool.filter(v => !sperret.has(v)).sort((a, b) => Math.abs(pool.indexOf(a) - i) - Math.abs(pool.indexOf(b) - i)).slice(0, 3);
+}
+ALG.forEach(a => {
+  const pool = POOL[a.p], kort = a.kort || a.navn;
+  if (a.alle) {
+    const [v, why] = a.alle, f = feilsvar(v, pool), mindre = f.find(x => pool.indexOf(x) < pool.indexOf(v));
+    // Det fjerde alternativet er den vanlige misforståelsen at beste tilfelle er raskere enn verste.
+    const blandet = mindre ? `${mindre} i beste og ${v} i verste tilfelle` : `${v} i beste og ${f[2]} i verste tilfelle`;
+    Q.push([a.t, `${a.navn}: kjøretid i beste, gjennomsnittlige og verste tilfelle?`,
+      [`${v} i alle tilfeller`, `${f[0]} i alle tilfeller`, `${f[1]} i alle tilfeller`, blandet], why, ""]);
+  }
+  [["beste", "kjøretid i beste tilfelle"], ["snitt", a.snittNavn || "kjøretid i gjennomsnittlig tilfelle"], ["verste", "kjøretid i verste tilfelle"]].forEach(([k, navn]) => {
+    if (!a[k]) return;
+    const [v, why, unngå] = a[k];
+    Q.push([a.t, `${a.navn}: ${navn}?`, [v, ...feilsvar(v, pool, unngå)], why, ""]);
+  });
+  if (a.minne) {
+    const [v, why, unngå] = a.minne;
+    Q.push([a.t, a.minneQ || `${a.navn}: hvor mye ekstra minne trengs i verste tilfelle, utover input?`, [v, ...feilsvar(v, POOL[a.mp || "n"], unngå)], why, ""]);
+  }
+  if (a.stabil) {
+    const [ja, why] = a.stabil, J = "Ja, like elementer beholder rekkefølgen sin", N = "Nei, like elementer kan bytte rekkefølge";
+    Q.push([a.t, `Er ${kort} stabil?`, ja ? [J, N] : [N, J], why, ""]);
+  }
+});
+
 const MESTRET = 2, EKS_N = 20, EKS_KRAV = 17;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -363,18 +524,11 @@ function lagre() {
 }
 
 async function hentLeaderboard() {
-  if (!ONLINE) return EKSEMPEL.map(r => ({ ...r, eksempel: true })).concat([{ ...oppsummer(), me: true }])
-    .sort((a, b) => b.mastered - a.mastered || b.best_exam - a.best_exam);
+  // Uten database finnes det ingen andre brukere å vise, så vi viser bare deg selv i stedet for oppdiktede rader.
+  if (!ONLINE) return [{ ...oppsummer(), me: true }];
   const rows = await api("progress?select=username,mastered,total,best_exam,exams,streak&order=mastered.desc,best_exam.desc&limit=100");
   return rows.map(r => r.username === bruker ? { ...oppsummer(), me: true } : r);
 }
-const EKSEMPEL = [
-  { username: "kariaas", mastered: 97, total: 123, best_exam: 19, exams: 8, streak: 6 },
-  { username: "olavhn", mastered: 81, total: 123, best_exam: 18, exams: 5, streak: 3 },
-  { username: "sigridmk", mastered: 64, total: 123, best_exam: 17, exams: 4, streak: 9 },
-  { username: "magnuslb", mastered: 40, total: 123, best_exam: 14, exams: 2, streak: 1 },
-  { username: "idaeng", mastered: 22, total: 123, best_exam: 12, exams: 1, streak: 0 }
-];
 
 // ---------- fremdrift ----------
 const status = i => { const s = D.st[i]; if (!s || !s.s) return "u"; if (s.c >= MESTRET) return "m"; if (s.c === 0) return "b"; return "p"; };
@@ -498,15 +652,13 @@ async function hjem() {
 function tegnLb(rows) {
   const el = $("#lb"); if (!el) return;
   if (!rows.length) { el.innerHTML = `<p class="muted" style="margin:0">Ingen her ennå. Svar på et spørsmål, så er du først.</p>`; return; }
-  const eksempel = rows.some(r => r.eksempel);
   el.innerHTML = `<div class="lbhead"><span>#</span><span>Bruker</span><span>Mestret</span><span>Beste prøve</span></div>
   <div class="lb">${rows.map((r, k) => {
     const p = Math.round(r.mastered / (r.total || Q.length) * 100);
     return `<div class="r ${r.me ? "me" : ""}"><span class="rank">${k + 1}</span><span class="nm">${esc(r.username)}${r.me ? " (deg)" : ""}</span>
       <span class="pct">${p} %</span><span class="sub2">${r.exams ? r.best_exam + "/" + EKS_N : "–"}</span>
       <span></span><div class="mini"><i style="width:${p}%"></i></div></div>`;
-  }).join("")}</div>
-  ${eksempel ? `<p class="note">De andre radene er eksempeldata til databasen er koblet til.</p>` : ""}`;
+  }).join("")}</div>`;
 }
 
 // ---------- økt ----------

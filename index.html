@@ -533,9 +533,9 @@ function vis() {
     <div class="meta"><span>${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " · " + esc(te) : ""}</span><span>${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : ""}</span></div>
     <p class="q">${esc(sp)}</p>
     <div class="opts">${ø.ordning.map((k, n) => `<button class="opt" data-k="${k}"><span class="k">${n + 1}</span><span>${esc(alts[k])}</span></button>`).join("")}</div>
-    <div class="why" id="why" hidden></div>
+    <div class="why" id="why" role="status" hidden></div>
   </section>
-  <p class="hint">Tastatur: 1–4 velger svar, Enter går videre.${ø.type === "eks" ? " På prøveeksamen får du fasit først til slutt." : ""}</p></div>`;
+  <p class="hint">Tastatur: 1–4 velger svar, Enter går videre.</p></div>`;
   $("#back").onclick = hjem;
   document.querySelectorAll(".opt").forEach(b => b.onclick = () => svar(+b.dataset.k));
 }
@@ -545,15 +545,10 @@ function svar(k) {
   if (ok) ø.riktig++;
   ø.svar.push({ idx, k, ok });
   registrer(idx, ok);
-  if (ø.type === "eks") {
-    document.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (+b.dataset.k === k) b.classList.add("picked"); });
-    setTimeout(() => { ø.i++; vis(); }, 220);
-    return;
-  }
   document.querySelectorAll(".opt").forEach(b => { b.disabled = true; const bk = +b.dataset.k; if (bk === 0) b.classList.add("right"); else if (bk === k) b.classList.add("wrong"); });
   const s = D.st[idx], w = $("#why"); w.hidden = false;
-  w.innerHTML = `<p class="verdict ${ok ? "ok" : "no"}">${ok ? (s.c >= MESTRET ? "Riktig, og nå mestret." : `Riktig. ${MESTRET - s.c} til på rad for å mestre.`) : "Feil. Riktig svar: " + esc(alts[0])}</p>
-    <p>${esc(why)}</p><div><button class="btn primary" id="next">Neste</button></div>`;
+  w.innerHTML = `<p class="verdict ${ok ? "ok" : "no"}">${ok ? (s.c >= MESTRET ? "Riktig, og nå mestret." : `Riktig. ${MESTRET - s.c} til på rad for å mestre.`) : "Feil."}</p>
+    <p><b>Riktig svar:</b> ${esc(alts[0])}</p><p><b>Forklaring:</b> ${esc(why)}</p><div><button class="btn primary" id="next">Neste</button></div>`;
   $("#next").onclick = () => { ø.i++; vis(); };
   $("#next").focus();
 }

@@ -3,144 +3,161 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AlgDat-pugg</title>
-<meta name="description" content="Flervalgspugg til TDT4120 Algoritmer og datastrukturer, med fremdrift og leaderboard.">
+<title>AlgdatMaster</title>
+<meta name="description" content="AlgdatMaster: flervalgspugg til TDT4120 Algoritmer og datastrukturer, med fremdrift og leaderboard.">
 <script>try{const t=localStorage.getItem("algdat-tema");if(t)document.documentElement.dataset.theme=t;}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: én kolonne. Hjem = fremdrift (total, temaer, prøvehistorikk). Øving = ett kort om gangen. */
+/* Tre kolonner på store skjermer: navigasjon, innhold, statistikk/leaderboard. Under 1200px havner statistikken under innholdet, under 860px blir navigasjonen en topplinje. */
 :root{
-  --bg:#f3f5f8; --surface:#ffffff; --fg:#17202b; --muted:#5a6676; --line:#d9dee6; --track:#e6eaf0;
-  --accent:#2747a8; --accent-soft:#e3e9f8; --on-accent:#ffffff;
-  --ok:#1f7a4a; --ok-soft:#e1f2e8; --mid:#c08a1a; --mid-soft:#f7eedb; --bad:#b0322b; --bad-soft:#f8e3e1;
-  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --body:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --bg:#fafafb; --panel:#f3f3f6; --surface:#ffffff; --line:#e6e6eb; --line2:#d9d9e0; --fg:#18181b; --muted:#52525b; --faint:#6b6b76;
+  --accent:#5b4bf5; --accent-soft:#eeecff; --on-accent:#ffffff; --teal:#0d9488;
+  --ok:#0f766e; --ok-bg:#ecfdf7; --ok-line:#5fd3bb; --bad:#be123c; --bad-bg:#fff1f3; --bad-line:#f6a3b4; --mid:#b45309;
+  --sans:"Inter",ui-sans-serif,system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#10151c; --surface:#18202a; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2a3542; --track:#242e3a;
-  --accent:#8aa6f5; --accent-soft:#1f2b47; --on-accent:#10151c;
-  --ok:#6cc995; --ok-soft:#173326; --mid:#e2b450; --mid-soft:#3a2f17; --bad:#ef8a83; --bad-soft:#3a1d1b; color-scheme:dark}}
+  --bg:#0b0b0e; --panel:#0f0f13; --surface:#131318; --line:#1e1e25; --line2:#2a2a33; --fg:#e8e8eb; --muted:#a1a1aa; --faint:#80808b;
+  --accent:#8b7dff; --accent-soft:#1d1a33; --on-accent:#0b0b0e; --teal:#2dd4bf;
+  --ok:#5eead4; --ok-bg:#0d1f1b; --ok-line:#1f6f5c; --bad:#fb7185; --bad-bg:#1f0f13; --bad-line:#5c2430; --mid:#fbbf24; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#10151c; --surface:#18202a; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2a3542; --track:#242e3a;
-  --accent:#8aa6f5; --accent-soft:#1f2b47; --on-accent:#10151c;
-  --ok:#6cc995; --ok-soft:#173326; --mid:#e2b450; --mid-soft:#3a2f17; --bad:#ef8a83; --bad-soft:#3a1d1b; color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.5}
-.wrap{max-width:720px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
-h1,h2{font-family:var(--display);margin:0;letter-spacing:-.01em}
-h1{font-size:2rem;font-weight:700}
-h2{font-size:1.1rem;font-weight:700}
-.muted{color:var(--muted)}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.between{justify-content:space-between}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.btn{font:600 .95rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:10px 16px;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.btn:disabled{opacity:.45;cursor:default}
-.btn:focus-visible,.opt:focus-visible,.tema:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.actions .btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:14px 16px}
-.actions .btn small{font-weight:400;font-size:.85rem;opacity:.85}
-/* fremdrift */
-.big{font-family:var(--display);font-size:3rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-.seg{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--track)}
-.seg i{display:block;height:100%}
-.seg .m{background:var(--ok)} .seg .p{background:var(--mid)} .seg .b{background:var(--bad)}
-.seg.thin{height:6px;border-radius:3px}
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{display:flex;flex-direction:column;gap:2px}
-.stat b{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
-.stat span{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.temaer{display:flex;flex-direction:column;gap:4px}
-.tema{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:none;border:0;border-radius:10px;padding:10px 8px;cursor:pointer}
-.tema:hover{background:var(--bg)}
-.tema .seg{grid-column:1 / -1}
-.tema .n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
-.badge{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;margin-left:8px;vertical-align:2px}
-.badge.ok{background:var(--ok-soft);color:var(--ok)}
-.chart{display:flex;align-items:flex-end;gap:6px;height:110px;position:relative;margin-top:18px}
-.chart .col{flex:1 1 0;max-width:40px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
-.chart .bar{width:100%;border-radius:4px 4px 0 0;background:var(--bad)}
-.chart .bar.pass{background:var(--ok)}
-.chart .lbl{position:absolute;font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.chart .line{position:absolute;left:0;right:0;border-top:1px dashed var(--muted);opacity:.6}
-.chart .linelbl{position:absolute;right:0;font-size:.7rem;color:var(--muted);transform:translateY(-110%)}
-/* øving */
-.top{display:flex;align-items:center;gap:12px}
-.top .seg{flex:1}
-.back{background:none;border:0;color:var(--accent);font:600 .95rem var(--body);cursor:pointer;padding:6px 0}
-.meta{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.q{font-family:var(--display);font-weight:500;font-size:1.3rem;line-height:1.35;margin:0;text-wrap:balance}
-.opts{display:flex;flex-direction:column;gap:10px}
-.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer}
-.opt .k{font-family:var(--mono);font-size:.8rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;margin-top:2px}
-.opt:hover:not(:disabled){border-color:var(--accent)}
-.opt:disabled{cursor:default}
-.opt.right{background:var(--ok-soft);border-color:var(--ok)}
-.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
-.opt.picked{border-color:var(--accent);background:var(--accent-soft)}
-.verdict{font-weight:600;margin:0}
-.verdict.ok{color:var(--ok)} .verdict.no{color:var(--bad)}
-.why{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
-.why p{margin:0}
-.result{text-align:center;align-items:center}
-.pill{display:inline-block;font-weight:700;padding:4px 14px;border-radius:999px}
-.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.no{background:var(--bad-soft);color:var(--bad)}
-.review{display:flex;flex-direction:column;gap:12px;text-align:left;width:100%}
-.review .item{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:4px}
-.review .item p{margin:0}
-.hint{font-size:.8rem;color:var(--muted);margin:0}
-.danger{background:none;border:0;color:var(--muted);font:.85rem var(--body);text-decoration:underline;cursor:pointer;align-self:flex-start;padding:0}
-@media (max-width:480px){.stats{grid-template-columns:repeat(3,1fr)}.big{font-size:2.4rem}}
-@media (prefers-reduced-motion: no-preference){.seg i{transition:width .3s}}
-</style>
-
-<style>
-:root{color-scheme:light}
+  --bg:#0b0b0e; --panel:#0f0f13; --surface:#131318; --line:#1e1e25; --line2:#2a2a33; --fg:#e8e8eb; --muted:#a1a1aa; --faint:#80808b;
+  --accent:#8b7dff; --accent-soft:#1d1a33; --on-accent:#0b0b0e; --teal:#2dd4bf;
+  --ok:#5eead4; --ok-bg:#0d1f1b; --ok-line:#1f6f5c; --bad:#fb7185; --bad-bg:#1f0f13; --bad-line:#5c2430; --mid:#fbbf24; color-scheme:dark}
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
 [hidden]{display:none!important}
-.wrap{max-width:1120px}
-.bar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.bar-top h1{font-size:1.6rem}
-.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.chipu{font:600 .9rem var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:4px 12px}
-.icon-btn{font:600 .85rem var(--body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
-.grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
-.col{display:flex;flex-direction:column;gap:20px;min-width:0}
-@media (min-width:900px){.grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
-.quizwrap{max-width:720px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-/* login */
-.login{max-width:440px;margin:6vh auto 0;width:100%}
-.login label{font-weight:600}
-.login input{font:1.1rem var(--mono);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
-.login input:focus{outline:2px solid var(--accent);outline-offset:1px}
-.err{color:var(--bad);font-size:.9rem;margin:0}
-/* leaderboard */
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{margin:0;letter-spacing:-.02em}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.mono{font-family:var(--mono)}
+kbd{font:500 11px var(--sans);color:var(--faint);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--surface)}
+
+/* ramme */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr) 300px;min-height:100vh}
+.side{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+.main{padding:44px clamp(20px,5vw,72px) 56px;min-width:0}
+.rpanel{background:var(--panel);border-left:1px solid var(--line);padding:24px 20px;display:flex;flex-direction:column;gap:22px}
+.logo{display:flex;gap:10px;align-items:center;font-weight:700;font-size:16px;padding:2px 8px 16px;letter-spacing:-.01em;background:none;border:0;cursor:pointer;text-align:left}
+.lg{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#7c6cff,#2dd4bf);flex:none}
+.sec{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;padding:14px 8px 6px}
+.it{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:7px 10px;flex:none;border-radius:8px;color:var(--muted);background:none;border:0;cursor:pointer;text-align:left;font-size:14px}
+.it:hover{background:var(--surface);color:var(--fg)} .it.on{background:var(--surface);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.it:disabled{opacity:.45;cursor:default}
+.it .c{font-variant-numeric:tabular-nums;font-size:12px;color:var(--faint)}
+.ring{width:18px;height:18px;border-radius:50%;flex:none;background:conic-gradient(var(--teal) var(--p),var(--line2) 0);display:grid;place-items:center}
+.ring::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--panel)}
+.it.on .ring::after,.it:hover .ring::after{background:var(--surface)}
+.foot{margin-top:auto;padding:16px 8px 0;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line)}
+.me{display:flex;align-items:center;gap:8px;font:500 13px var(--mono)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 11px var(--sans);text-transform:uppercase}
+.ghost{background:none;border:1px solid var(--line2);border-radius:8px;padding:5px 10px;font-size:13px;color:var(--muted);cursor:pointer}
+.ghost:hover{color:var(--fg);border-color:var(--faint)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.topbar{display:none}
+
+/* knapper og kort */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--surface);border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.crumb{color:var(--faint);font-size:13px} .crumb b{color:var(--muted);font-weight:500}
+.h1{font-size:30px;font-weight:600;line-height:1.2;margin:12px 0 24px;text-wrap:balance}
+
+/* oversikt */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:end}
+.big{font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.seg{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line)}
+.seg i{display:block;height:100%} .seg .m{background:var(--teal)} .seg .p{background:var(--mid)} .seg .b{background:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--faint);margin-top:10px;font-variant-numeric:tabular-nums}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var(--c)}
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:28px 0}
+.act{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.act:hover{border-color:var(--line2)} .act b{font-size:15px} .act span{font-size:13px;color:var(--faint)}
+.act.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)} .act.primary span{color:inherit;opacity:.85}
+.act:disabled{opacity:.45;cursor:default}
+.h2{font-size:13px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin:30px 0 12px}
+.grid-t{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.tcard{display:flex;flex-direction:column;gap:10px;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.tcard:hover{border-color:var(--line2)}
+.tcard .row{justify-content:space-between;width:100%} .tcard .n{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;position:relative;margin-top:20px}
+.chart .col{flex:1 1 0;max-width:36px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
+.chart .bar{width:100%;border-radius:4px 4px 0 0;background:var(--bad)} .chart .bar.pass{background:var(--teal)}
+.chart .lbl{position:absolute;left:0;right:0;text-align:center;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.chart .line{position:absolute;left:0;right:0;border-top:1px dashed var(--faint);opacity:.6}
+.chart .linelbl{position:absolute;right:0;font-size:11px;color:var(--faint);transform:translateY(-110%)}
+.danger{background:none;border:0;color:var(--faint);font-size:13px;text-decoration:underline;cursor:pointer;padding:0;margin-top:28px}
+
+/* spørsmål */
+.prog{height:3px;background:var(--line);border-radius:9px;margin-bottom:28px;overflow:hidden} .prog i{display:block;height:100%;background:var(--accent)}
+.back{background:none;border:0;color:var(--faint);cursor:pointer;padding:0;font-size:13px}
+.back:hover{color:var(--fg)}
+.quiz{max-width:860px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:500 15px var(--mono);cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt .lab{margin-left:auto;font:500 12px var(--sans)}
+.opt.right{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok)}
+.opt.wrong{border-color:var(--bad-line);background:var(--bad-bg);color:var(--bad)}
+.opt.picked{border-color:var(--accent);background:var(--accent-soft)}
+.why{margin-top:20px;border-left:2px solid var(--accent);padding:2px 0 2px 16px;display:flex;flex-direction:column;gap:8px;color:var(--muted);line-height:1.6}
+.why p{margin:0} .why b{color:var(--fg);font-weight:600}
+.verdict{font-weight:600} .verdict.ok{color:var(--ok)} .verdict.no{color:var(--bad)}
+.src{font-size:12px;color:var(--faint)}
+.hint{color:var(--faint);font-size:13px;margin-top:22px}
+.pill{display:inline-block;font-weight:600;font-size:13px;padding:4px 12px;border-radius:99px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.no{background:var(--bad-bg);color:var(--bad)}
+.review{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.review .item{display:flex;flex-direction:column;gap:4px} .review p{margin:0}
+
+/* høyre kolonne */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.st{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.st b{display:block;font-size:22px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums} .st span{color:var(--faint);font-size:12px}
+.sync{font-size:12px;color:var(--faint)}
 .lb{display:flex;flex-direction:column}
-.lb .r{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
-.lb .r:first-child{border-top:0}
-.lb .r.me{background:var(--accent-soft);border-radius:8px;border-top-color:transparent}
-.lb .rank{font-family:var(--display);font-weight:700;color:var(--muted);text-align:right}
-.lb .r:nth-child(-n+3) .rank{color:var(--fg)}
-.lb .nm{font-family:var(--mono);font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb .pct{font-weight:600}
-.lb .sub2{font-size:.8rem;color:var(--muted);min-width:4.5em;text-align:right}
-.lb .mini{grid-column:2 / -1;height:4px;border-radius:2px;background:var(--track);overflow:hidden}
-.lb .mini i{display:block;height:100%;background:var(--ok)}
-.lbhead{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto auto;gap:10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:0 6px}
-.lbhead span:nth-child(3){text-align:right}
-.lbhead span:nth-child(4){min-width:4.5em;text-align:right}
-.note{font-size:.8rem;color:var(--muted);margin:0}
-.sync{font-size:.8rem;color:var(--muted)}
+.lb .r{display:grid;grid-template-columns:1.6em minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 8px;border-bottom:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px}
+.lb .r.me{color:var(--fg);background:var(--surface);border-radius:8px;border-bottom-color:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.lb .rank{color:var(--faint)} .lb .nm{font-family:var(--mono);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .sub{grid-column:2 / -1;font-size:11px;color:var(--faint);margin-top:-4px}
+.err{color:var(--bad);font-size:13px;margin:0}
+
+/* innlogging */
+.login{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.login form{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+.login label{font-weight:600;font-size:14px;margin-top:8px}
+.login input{font:500 16px var(--mono);padding:12px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);width:100%}
+.login input:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+@media (max-width:1199px){
+  .app{grid-template-columns:248px minmax(0,1fr)}
+  .rpanel{grid-column:2;border-left:0;border-top:1px solid var(--line);background:none;padding:28px clamp(20px,5vw,72px) 48px}
+  .rpanel .rin{max-width:640px;display:flex;flex-direction:column;gap:22px}
+}
+@media (max-width:859px){
+  .app{display:block}
+  .side{display:none}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:2}
+  .topbar .logo{padding:0}
+  .main{padding:24px 16px 40px}
+  .rpanel{padding:24px 16px 40px}
+  .app.fokus .rpanel{display:none}
+  .h1{font-size:23px}
+  .big{font-size:44px}
+  .hero{grid-template-columns:1fr;gap:12px}
+}
+@media (prefers-reduced-motion: no-preference){.seg i,.prog i{transition:width .3s}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<div id="app"></div>
 <script>
 // ======= KONFIG: fyll inn fra Supabase → Project Settings → API =======
 const SUPABASE_URL = "https://nyzhvvqrevsgnhxnpync.supabase.co";      // f.eks. "https://abcd1234.supabase.co"
@@ -473,8 +490,9 @@ function settTema(t) {
   if (t === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
   try { t === "system" ? localStorage.removeItem("algdat-tema") : localStorage.setItem("algdat-tema", t); } catch {}
 }
-const temaKnapp = () => `<button class="icon-btn" id="tema" aria-label="Bytt fargetema">Tema: ${temaNavn[tema]}</button>`;
-function koblTema() { const b = $("#tema"); if (b) b.onclick = () => { settTema(temaValg[(temaValg.indexOf(tema) + 1) % 3]); b.innerHTML = `Tema: ${temaNavn[tema]}`; }; }
+// Knappen kan finnes både i sidemenyen og i topplinja på mobil, så den kobles via klasse og ikke id.
+const temaKnapp = () => `<button class="ghost tema-btn" aria-label="Bytt fargetema">Tema: ${temaNavn[tema]}</button>`;
+function koblTema() { document.querySelectorAll(".tema-btn").forEach(b => b.onclick = () => { settTema(temaValg[(temaValg.indexOf(tema) + 1) % 3]); document.querySelectorAll(".tema-btn").forEach(x => x.textContent = `Tema: ${temaNavn[tema]}`); }); }
 
 // ---------- bruker og lagring ----------
 let bruker = (() => { try { return localStorage.getItem("algdat-bruker"); } catch { return null; } })();
@@ -548,19 +566,76 @@ function streak() {
 const seg = (t, n, cls = "") => `<div class="seg ${cls}" role="img" aria-label="${t.m} mestret, ${t.p} på vei, ${t.b} feil sist, ${t.u} ikke sett">
   <i class="m" style="width:${t.m / n * 100}%"></i><i class="p" style="width:${t.p / n * 100}%"></i><i class="b" style="width:${t.b / n * 100}%"></i></div>`;
 
+// ---------- ramme ----------
+const ikon = () => `<span class="lg" aria-hidden="true"></span>`;
+const ring = (m, n) => `<span class="ring" style="--p:${n ? m / n * 100 : 0}%" role="img" aria-label="${m} av ${n} mestret"></span>`;
+// Leaderboardet hentes bare på oversikten og mellomlagres, så hvert spørsmål ikke gir et nytt kall mot databasen.
+let lbRader = null, lbFeil = false;
+
+function ramme(main, { aktiv = "hjem", fokus = false } = {}) {
+  const alle = Q.map((_, i) => i), bom = alle.filter(i => status(i) === "b").length;
+  const t = telling(alle), beste = D.eks.length ? Math.max(...D.eks.map(e => e.r)) : null;
+  $("#app").innerHTML = `<div class="app ${fokus ? "fokus" : ""}">
+  <nav class="side" aria-label="Hovedmeny">
+    <button class="logo" data-go="hjem">${ikon()}AlgdatMaster</button>
+    <button class="it ${aktiv === "hjem" ? "on" : ""}" data-go="hjem">Oversikt</button>
+    <div class="sec">Øv</div>
+    <button class="it ${aktiv === "eks" ? "on" : ""}" data-go="eks">Prøveeksamen <span class="c">${EKS_N}</span></button>
+    <button class="it ${aktiv === "øv:" ? "on" : ""}" data-go="mix">Øv blandet <span class="c">15</span></button>
+    <button class="it ${aktiv === "bom" ? "on" : ""}" data-go="bom" ${bom ? "" : "disabled"}>Repeter feil <span class="c">${bom}</span></button>
+    <div class="sec">Temaer</div>
+    <div class="scroll">${temaer.map(te => { const ix = alle.filter(i => Q[i][0] === te), tt = telling(ix);
+      return `<button class="it ${aktiv === "øv:" + te ? "on" : ""}" data-tema="${esc(te)}">${esc(te)} ${ring(tt.m, ix.length)}</button>`; }).join("")}</div>
+    <div class="foot">
+      <div class="me"><span class="av">${esc(bruker.slice(0, 2))}</span>${esc(bruker)}</div>
+      <div class="row"><button class="ghost" data-ut>Bytt bruker</button>${temaKnapp()}</div>
+    </div>
+  </nav>
+  <header class="topbar"><button class="logo" data-go="hjem">${ikon()}AlgdatMaster</button><div class="row">${temaKnapp()}</div></header>
+  <main class="main" id="main">${main}</main>
+  <aside class="rpanel" aria-label="Statistikk og leaderboard"><div class="rin">
+    <div class="stats">
+      <div class="st"><b>${Math.round(t.m / Q.length * 100)} %</b><span>mestret</span></div>
+      <div class="st"><b>${streak()}</b><span>dager på rad</span></div>
+      <div class="st"><b>${beste === null ? "–" : beste + "/" + EKS_N}</b><span>beste prøve</span></div>
+      <div class="st"><b>${D.eks.length}</b><span>prøver</span></div>
+    </div>
+    <span class="sync" id="sync">${ONLINE ? esc(syncStatus) : "Ikke koblet til databasen, lagres bare i denne nettleseren"}</span>
+    <section><div class="sec" style="padding-left:0">Leaderboard</div><div id="lb">${lbHtml()}</div></section>
+    <div class="row faint" style="font-size:13px">Logget inn som <span class="mono">${esc(bruker)}</span><button class="ghost" data-ut>Bytt bruker</button></div>
+  </div></aside></div>`;
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => {
+    const g = b.dataset.go;
+    if (g === "hjem") hjem(); else if (g === "mix") startØkt("øv", null); else startØkt(g);
+  });
+  document.querySelectorAll("[data-tema]").forEach(b => b.onclick = () => startØkt("øv", b.dataset.tema));
+  document.querySelectorAll("[data-ut]").forEach(b => b.onclick = () => { try { localStorage.removeItem("algdat-bruker"); } catch {} ; økt = null; login(); });
+  koblTema();
+}
+
+function lbHtml() {
+  if (lbFeil) return `<p class="err">Fikk ikke hentet leaderboardet. Sjekk nettet og last inn siden på nytt.</p>`;
+  if (!lbRader) return `<p class="faint" style="margin:0;font-size:13px">Henter …</p>`;
+  if (!lbRader.length) return `<p class="faint" style="margin:0;font-size:13px">Ingen her ennå. Svar på et spørsmål, så er du først.</p>`;
+  return `<div class="lb">${lbRader.map((r, k) => {
+    const p = Math.round(r.mastered / (r.total || Q.length) * 100);
+    return `<div class="r ${r.me ? "me" : ""}"><span class="rank">${k + 1}</span><span class="nm">${esc(r.username)}${r.me ? " (deg)" : ""}</span><span>${p} %</span>
+      <span class="sub">${r.exams ? "beste prøve " + r.best_exam + "/" + EKS_N : "ingen prøver"}</span></div>`;
+  }).join("")}</div>`;
+}
+
 // ---------- innlogging ----------
 function login() {
-  $("#app").innerHTML = `
-  <div class="bar-top"><h1>AlgDat-pugg</h1>${temaKnapp()}</div>
-  <form class="panel login" id="f">
-    <h2>Logg inn med NTNU-brukernavn</h2>
+  $("#app").innerHTML = `<div class="login"><form id="f">
+    <div class="row" style="justify-content:space-between"><span class="logo" style="padding:0">${ikon()}AlgdatMaster</span>${temaKnapp()}</div>
+    <h1 class="h1" style="margin:20px 0 0">Logg inn med NTNU-brukernavn</h1>
     <p class="muted" style="margin:0">Fremgangen din lagres på brukernavnet, og du havner på leaderboardet med de andre. Ingen passord.</p>
     <label for="u">Brukernavn</label>
     <input id="u" name="u" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="f.eks. nicolaok" value="${esc(bruker || "")}">
     <p class="err" id="err" hidden></p>
-    <button class="btn primary" type="submit">Start</button>
-    <p class="note">${Q.length} flervalgsspørsmål fra TDT4120-eksamenene 2023–2026.</p>
-  </form>`;
+    <button class="btn primary" type="submit" style="justify-content:center">Start</button>
+    <p class="faint" style="font-size:13px;margin:4px 0 0">${Q.length} flervalgsspørsmål til TDT4120, mange fra eksamenene 2023–2026.</p>
+  </form></div>`;
   koblTema();
   $("#u").focus();
   $("#f").onsubmit = async e => {
@@ -569,96 +644,49 @@ function login() {
     if (!/^[a-z0-9]{2,20}$/.test(u)) { const er = $("#err"); er.hidden = false; er.textContent = "Bruk NTNU-brukernavnet ditt: små bokstaver og tall, uten @ntnu.no."; return; }
     bruker = u; try { localStorage.setItem("algdat-bruker", u); } catch {}
     D = { st: {}, eks: [], dager: [] };
+    lbRader = null;
     await lastBruker(u);
     hjem();
   };
 }
 
-// ---------- hjem ----------
+// ---------- oversikt ----------
 async function hjem() {
   økt = null;
   const alle = Q.map((_, i) => i), t = telling(alle), n = Q.length;
-  const pct = Math.round(t.m / n * 100);
   const bom = alle.filter(i => status(i) === "b").length;
   const svakest = temaer.map(te => { const ix = alle.filter(i => Q[i][0] === te); return [te, telling(ix).m / ix.length]; }).sort((a, b) => a[1] - b[1])[0];
   const eks = D.eks.slice(-12);
-  const beste = D.eks.length ? Math.max(...D.eks.map(e => e.r)) : null;
-  $("#app").innerHTML = `
-  <div class="bar-top"><h1>AlgDat-pugg</h1>
-    <div class="who"><span class="chipu">${esc(bruker)}</span><button class="icon-btn" id="ut">Bytt bruker</button>${temaKnapp()}</div></div>
-  <div class="grid">
-   <div class="col">
-    <section class="panel">
-      <div class="row between" style="align-items:flex-end">
-        <div><div class="big">${pct} %</div><div class="muted">mestret (${t.m} av ${n})</div></div>
-        <div class="muted" style="text-align:right;font-size:.9rem">Mestret = riktig ${MESTRET} ganger på rad</div>
-      </div>
-      ${seg(t, n)}
-      <div class="legend">
-        <span style="--c:var(--ok)">Mestret ${t.m}</span><span style="--c:var(--mid)">På vei ${t.p}</span>
-        <span style="--c:var(--bad)">Feil sist ${t.b}</span><span style="--c:var(--track)">Ikke sett ${t.u}</span>
-      </div>
-      <div class="stats">
-        <div class="stat"><b>${streak()}</b><span>dager på rad</span></div>
-        <div class="stat"><b>${D.eks.length}</b><span>prøver</span></div>
-        <div class="stat"><b>${beste === null ? "–" : beste + "/" + EKS_N}</b><span>beste prøve</span></div>
-      </div>
-      <span class="sync" id="sync">${ONLINE ? esc(syncStatus) : "Ikke koblet til databasen ennå, lagres bare i denne nettleseren"}</span>
-    </section>
-    <div class="actions">
-      <button class="btn primary" id="goEks">Prøveeksamen<small>${EKS_N} spørsmål, bestått ved ${EKS_KRAV}</small></button>
-      <button class="btn" id="goMix">Øv blandet<small>15 spørsmål, svakeste først</small></button>
-      <button class="btn" id="goBom" ${bom ? "" : "disabled"}>Repeter feil<small>${bom} du svarte feil på sist</small></button>
+  ramme(`
+    <div class="crumb">Oversikt · Mestret = riktig ${MESTRET} ganger på rad</div>
+    <div class="hero" style="margin-top:14px">
+      <div><div class="big">${Math.round(t.m / n * 100)} %</div><div class="muted">mestret, ${t.m} av ${n}</div></div>
+      <div>${seg(t, n)}<div class="legend"><span style="--c:var(--teal)">Mestret ${t.m}</span><span style="--c:var(--mid)">På vei ${t.p}</span><span style="--c:var(--bad)">Feil sist ${t.b}</span><span style="--c:var(--line2)">Ikke sett ${t.u}</span></div></div>
     </div>
-    <section class="panel">
-      <div class="row between"><h2>Temaer</h2><span class="muted" style="font-size:.85rem">Svakest nå: ${esc(svakest[0])}</span></div>
-      <div class="temaer">${temaer.map(te => {
-        const ix = alle.filter(i => Q[i][0] === te), tt = telling(ix);
-        return `<button class="tema" data-t="${esc(te)}"><span>${esc(te)}${tt.m === ix.length ? '<span class="badge ok">Mestret</span>' : ""}</span><span class="n">${tt.m} / ${ix.length}</span>${seg(tt, ix.length, "thin")}</button>`;
-      }).join("")}</div>
-    </section>
-   </div>
-   <div class="col">
-    <section class="panel">
-      <div class="row between"><h2>Leaderboard</h2><span class="muted" style="font-size:.85rem">Rangert på mestrede spørsmål</span></div>
-      <div id="lb"><p class="muted" style="margin:0">Henter …</p></div>
-    </section>
-    <section class="panel">
-      <h2>Dine prøveeksamener</h2>
-      ${eks.length ? `<div class="chart">
-        <div class="line" style="bottom:${EKS_KRAV / EKS_N * 100}%"></div><div class="linelbl" style="bottom:${EKS_KRAV / EKS_N * 100}%">krav ${EKS_KRAV}</div>
-        ${eks.map(e => `<div class="col" title="${e.d}: ${e.r}/${EKS_N}"><span class="lbl" style="bottom:calc(${Math.max(e.r / EKS_N * 100, 2)}% + 2px)">${e.r}</span><div class="bar ${e.r >= EKS_KRAV ? "pass" : ""}" style="height:${Math.max(e.r / EKS_N * 100, 2)}%"></div></div>`).join("")}
-      </div><p class="hint">Siste ${eks.length} prøver, eldst til venstre.</p>`
-      : `<p class="muted" style="margin:0">Ingen prøver tatt ennå. Resultatene havner her som søyler mot kravet på ${EKS_KRAV} av ${EKS_N}.</p>`}
-    </section>
-    <button class="danger" id="reset">Nullstill fremgangen min</button>
-   </div>
-  </div>`;
-  koblTema();
-  $("#ut").onclick = () => { try { localStorage.removeItem("algdat-bruker"); } catch {} ; login(); };
-  $("#goEks").onclick = () => startØkt("eks");
-  $("#goMix").onclick = () => startØkt("øv", null);
-  $("#goBom").onclick = () => startØkt("bom");
-  document.querySelectorAll(".tema").forEach(b => b.onclick = () => startØkt("øv", b.dataset.t));
+    <div class="acts">
+      <button class="act primary" data-go="eks"><b>Prøveeksamen</b><span>${EKS_N} spørsmål, bestått ved ${EKS_KRAV}</span></button>
+      <button class="act" data-go="mix"><b>Øv blandet</b><span>15 spørsmål, svakeste først</span></button>
+      <button class="act" data-go="bom" ${bom ? "" : "disabled"}><b>Repeter feil</b><span>${bom} du svarte feil på sist</span></button>
+    </div>
+    <div class="row" style="justify-content:space-between"><h2 class="h2" style="margin:0">Temaer</h2><span class="faint" style="font-size:13px">Svakest nå: ${esc(svakest[0])}</span></div>
+    <div class="grid-t" style="margin-top:12px">${temaer.map(te => {
+      const ix = alle.filter(i => Q[i][0] === te), tt = telling(ix);
+      return `<button class="tcard" data-tema="${esc(te)}"><span class="row"><b style="font-weight:600">${esc(te)}</b><span class="n">${tt.m} / ${ix.length}</span></span>${seg(tt, ix.length)}</button>`;
+    }).join("")}</div>
+    <h2 class="h2">Dine prøveeksamener</h2>
+    ${eks.length ? `<div class="card"><div class="chart">
+      <div class="line" style="bottom:${EKS_KRAV / EKS_N * 100}%"></div><div class="linelbl" style="bottom:${EKS_KRAV / EKS_N * 100}%">krav ${EKS_KRAV}</div>
+      ${eks.map(e => `<div class="col" title="${e.d}: ${e.r}/${EKS_N}"><span class="lbl" style="bottom:calc(${Math.max(e.r / EKS_N * 100, 2)}% + 2px)">${e.r}</span><div class="bar ${e.r >= EKS_KRAV ? "pass" : ""}" style="height:${Math.max(e.r / EKS_N * 100, 2)}%"></div></div>`).join("")}
+    </div><p class="faint" style="font-size:12px;margin:10px 0 0">Siste ${eks.length} prøver, eldst til venstre.</p></div>`
+    : `<p class="faint" style="margin:0">Ingen prøver tatt ennå. Resultatene havner her som søyler mot kravet på ${EKS_KRAV} av ${EKS_N}.</p>`}
+    <button class="danger" id="reset">Nullstill fremgangen min</button>`);
   $("#reset").onclick = () => {
     const b = $("#reset");
     if (b.dataset.sure) { D = { st: {}, eks: [], dager: [] }; lagre(); hjem(); }
     else { b.dataset.sure = 1; b.textContent = "Trykk igjen for å slette alt"; }
   };
-  try { tegnLb(await hentLeaderboard()); }
-  catch { const el = $("#lb"); if (el) el.innerHTML = `<p class="err">Fikk ikke hentet leaderboardet. Sjekk nettet og last inn siden på nytt.</p>`; }
-}
-
-function tegnLb(rows) {
-  const el = $("#lb"); if (!el) return;
-  if (!rows.length) { el.innerHTML = `<p class="muted" style="margin:0">Ingen her ennå. Svar på et spørsmål, så er du først.</p>`; return; }
-  el.innerHTML = `<div class="lbhead"><span>#</span><span>Bruker</span><span>Mestret</span><span>Beste prøve</span></div>
-  <div class="lb">${rows.map((r, k) => {
-    const p = Math.round(r.mastered / (r.total || Q.length) * 100);
-    return `<div class="r ${r.me ? "me" : ""}"><span class="rank">${k + 1}</span><span class="nm">${esc(r.username)}${r.me ? " (deg)" : ""}</span>
-      <span class="pct">${p} %</span><span class="sub2">${r.exams ? r.best_exam + "/" + EKS_N : "–"}</span>
-      <span></span><div class="mini"><i style="width:${p}%"></i></div></div>`;
-  }).join("")}</div>`;
+  try { lbRader = await hentLeaderboard(); lbFeil = false; } catch { lbFeil = true; }
+  const el = $("#lb"); if (el) el.innerHTML = lbHtml();
 }
 
 // ---------- økt ----------
@@ -672,6 +700,7 @@ function startØkt(type, tema) {
   økt = { type, tema, ix, i: 0, riktig: 0, svar: [], låst: false };
   vis();
 }
+const øktAktiv = ø => ø.type === "øv" ? "øv:" + (ø.tema || "") : ø.type;
 function vis() {
   const ø = økt;
   if (ø.i >= ø.ix.length) return slutt();
@@ -679,17 +708,14 @@ function vis() {
   ø.låst = false; ø.ordning = shuffle(alts.map((_, k) => k));
   const tittel = ø.type === "eks" ? "Prøveeksamen" : ø.type === "bom" ? "Repeter feil" : (ø.tema || "Blandet");
   const st = status(idx);
-  $("#app").innerHTML = `<div class="quizwrap">
-  <div class="top"><button class="back" id="back">← Avslutt</button>
-    <div class="seg thin"><i class="m" style="width:${ø.i / ø.ix.length * 100}%;background:var(--accent)"></i></div>
-    <span class="muted" style="font-variant-numeric:tabular-nums">${ø.i + 1}/${ø.ix.length}</span></div>
-  <section class="panel">
-    <div class="meta"><span>${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " · " + esc(te) : ""}${kilde ? " · Eksamen " + esc(kilde) : ""}</span><span>${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : ""}</span></div>
-    <p class="q">${esc(sp)}</p>
-    <div class="opts">${ø.ordning.map((k, n) => `<button class="opt" data-k="${k}"><span class="k">${n + 1}</span><span>${esc(alts[k])}</span></button>`).join("")}</div>
+  ramme(`<div class="quiz">
+    <div class="prog"><i style="width:${ø.i / ø.ix.length * 100}%"></i></div>
+    <div class="row" style="justify-content:space-between"><button class="back" id="back">← Avslutt</button><span class="faint" style="font-size:13px">${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : "På vei"}</span></div>
+    <div class="crumb" style="margin-top:14px">${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " / " + esc(te) : ""}${kilde ? ` / <b>Eksamen ${esc(kilde)}</b>` : ""} · ${ø.i + 1} av ${ø.ix.length}</div>
+    <h1 class="h1">${esc(sp)}</h1>
+    <div class="opts">${ø.ordning.map((k, n) => `<button class="opt" data-k="${k}"><kbd>${n + 1}</kbd><span>${esc(alts[k])}</span></button>`).join("")}</div>
     <div class="why" id="why" role="status" hidden></div>
-  </section>
-  <p class="hint">Tastatur: 1–4 velger svar, Enter går videre.</p></div>`;
+    <p class="hint">Trykk <kbd>1</kbd>–<kbd>4</kbd> for å svare og <kbd>Enter</kbd> for neste.</p></div>`, { aktiv: øktAktiv(ø), fokus: true });
   $("#back").onclick = hjem;
   document.querySelectorAll(".opt").forEach(b => b.onclick = () => svar(+b.dataset.k));
 }
@@ -699,10 +725,15 @@ function svar(k) {
   if (ok) ø.riktig++;
   ø.svar.push({ idx, k, ok });
   registrer(idx, ok);
-  document.querySelectorAll(".opt").forEach(b => { b.disabled = true; const bk = +b.dataset.k; if (bk === 0) b.classList.add("right"); else if (bk === k) b.classList.add("wrong"); });
+  document.querySelectorAll(".opt").forEach(b => {
+    b.disabled = true; const bk = +b.dataset.k;
+    if (bk === 0) { b.classList.add("right"); b.insertAdjacentHTML("beforeend", `<span class="lab">Riktig</span>`); }
+    else if (bk === k) { b.classList.add("wrong"); b.insertAdjacentHTML("beforeend", `<span class="lab">Ditt svar</span>`); }
+  });
   const s = D.st[idx], w = $("#why"); w.hidden = false;
   w.innerHTML = `<p class="verdict ${ok ? "ok" : "no"}">${ok ? (s.c >= MESTRET ? "Riktig, og nå mestret." : `Riktig. ${MESTRET - s.c} til på rad for å mestre.`) : "Feil."}</p>
-    <p><b>Riktig svar:</b> ${esc(alts[0])}</p><p><b>Forklaring:</b> ${esc(why)}</p><p class="hint">Kilde: ${esc(kildeTekst(kilde))}</p><div><button class="btn primary" id="next">Neste</button></div>`;
+    <p><b>Riktig svar:</b> ${esc(alts[0])}</p><p><b>Forklaring:</b> ${esc(why)}</p><p class="src">Kilde: ${esc(kildeTekst(kilde))}</p>
+    <div><button class="btn primary" id="next">Neste →</button></div>`;
   $("#next").onclick = () => { ø.i++; vis(); };
   $("#next").focus();
 }
@@ -710,14 +741,15 @@ function slutt() {
   const ø = økt, n = ø.ix.length;
   if (ø.type === "eks" && !ø.lagret) { ø.lagret = true; D.eks.push({ d: idag(), r: ø.riktig }); lagre(); }
   const feil = ø.svar.filter(s => !s.ok), bestått = ø.riktig >= EKS_KRAV;
-  $("#app").innerHTML = `<div class="quizwrap"><section class="panel result">
-    <div class="big">${ø.riktig} / ${n}</div>
-    ${ø.type === "eks" ? `<span class="pill ${bestått ? "ok" : "no"}">${bestått ? "Bestått" : "Ikke bestått"}</span><p class="muted" style="margin:0">Krav: ${EKS_KRAV} av ${EKS_N}.</p>`
-      : `<p class="muted" style="margin:0">${Math.round(ø.riktig / n * 100)} % riktig denne runden.</p>`}
-    <div class="row" style="justify-content:center"><button class="btn primary" id="home">Til oversikten</button><button class="btn" id="again">${ø.type === "eks" ? "Ny prøve" : "Ny runde"}</button></div>
-    ${feil.length ? `<div class="review"><h2>Det du bommet på</h2>${feil.map(s => { const [te, sp, alts, why, kilde] = Q[s.idx];
-      return `<div class="item"><span class="muted" style="font-size:.8rem;text-transform:uppercase;letter-spacing:.05em">${esc(te)}</span><p><b>${esc(sp)}</b></p><p style="color:var(--bad)">Du svarte: ${esc(alts[s.k])}</p><p style="color:var(--ok)">Riktig: ${esc(alts[0])}</p><p class="muted">${esc(why)}</p><p class="hint">Kilde: ${esc(kildeTekst(kilde))}</p></div>`; }).join("")}</div>` : ""}
-  </section></div>`;
+  ramme(`<div class="quiz">
+    <div class="crumb">${ø.type === "eks" ? "Prøveeksamen" : "Runde"} ferdig</div>
+    <div class="big" style="margin-top:14px">${ø.riktig} / ${n}</div>
+    <div class="row" style="margin-top:12px">${ø.type === "eks" ? `<span class="pill ${bestått ? "ok" : "no"}">${bestått ? "Bestått" : "Ikke bestått"}</span><span class="faint">Krav: ${EKS_KRAV} av ${EKS_N}</span>`
+      : `<span class="faint">${Math.round(ø.riktig / n * 100)} % riktig denne runden</span>`}</div>
+    <div class="row" style="margin-top:22px"><button class="btn primary" id="again">${ø.type === "eks" ? "Ny prøve" : "Ny runde"}</button><button class="btn" id="home">Til oversikten</button></div>
+    ${feil.length ? `<h2 class="h2">Det du bommet på</h2><div class="review">${feil.map(s => { const [te, sp, alts, why, kilde] = Q[s.idx];
+      return `<div class="card item"><span class="crumb">${esc(te)}</span><p style="font-weight:600">${esc(sp)}</p><p style="color:var(--bad)">Du svarte: <span class="mono">${esc(alts[s.k])}</span></p><p style="color:var(--ok)">Riktig: <span class="mono">${esc(alts[0])}</span></p><p class="muted">${esc(why)}</p><p class="src">Kilde: ${esc(kildeTekst(kilde))}</p></div>`; }).join("")}</div>` : ""}
+  </div>`, { aktiv: øktAktiv(ø) });
   $("#home").onclick = hjem;
   $("#again").onclick = () => startØkt(ø.type, ø.tema);
 }

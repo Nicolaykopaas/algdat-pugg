@@ -675,7 +675,7 @@ function startØkt(type, tema) {
 function vis() {
   const ø = økt;
   if (ø.i >= ø.ix.length) return slutt();
-  const idx = ø.ix[ø.i], [te, sp, alts] = Q[idx];
+  const idx = ø.ix[ø.i], [te, sp, alts, , kilde] = Q[idx];
   ø.låst = false; ø.ordning = shuffle(alts.map((_, k) => k));
   const tittel = ø.type === "eks" ? "Prøveeksamen" : ø.type === "bom" ? "Repeter feil" : (ø.tema || "Blandet");
   const st = status(idx);
@@ -684,7 +684,7 @@ function vis() {
     <div class="seg thin"><i class="m" style="width:${ø.i / ø.ix.length * 100}%;background:var(--accent)"></i></div>
     <span class="muted" style="font-variant-numeric:tabular-nums">${ø.i + 1}/${ø.ix.length}</span></div>
   <section class="panel">
-    <div class="meta"><span>${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " · " + esc(te) : ""}</span><span>${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : ""}</span></div>
+    <div class="meta"><span>${esc(tittel)}${ø.type !== "øv" || !ø.tema ? " · " + esc(te) : ""}${kilde ? " · Eksamen " + esc(kilde) : ""}</span><span>${st === "b" ? "Feil sist" : st === "m" ? "Mestret" : st === "u" ? "Nytt" : ""}</span></div>
     <p class="q">${esc(sp)}</p>
     <div class="opts">${ø.ordning.map((k, n) => `<button class="opt" data-k="${k}"><span class="k">${n + 1}</span><span>${esc(alts[k])}</span></button>`).join("")}</div>
     <div class="why" id="why" role="status" hidden></div>
